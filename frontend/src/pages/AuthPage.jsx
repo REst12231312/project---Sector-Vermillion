@@ -32,7 +32,7 @@ export default function AuthPage({ register = false }) {
     <Link to="/" className="brand auth-brand"><span className="brand-seal">V</span><span><b>SECTOR</b><small>VERMILLION · 41K</small></span></Link>
     <section className="auth-card">
       <p className="eyebrow">АРХИВИУМ · ДОСТУП ПО ПРОПУСКУ</p>
-      <h1>{register ? 'Создать аккаунт' : 'Войти в архив'}</h1>
+      <h1>{register ? 'Вступить в ряды' : 'Войти в архив'}</h1>
       <p className="auth-intro">{register ? 'Зарегистрируй позывной, чтобы сохранить прогресс и открытые главы.' : 'Введи позывной и пароль, чтобы продолжить исследование сектора.'}</p>
       <form className="auth-form" onSubmit={submit}>
         <label htmlFor="username">ПОЗЫВНОЙ</label>
@@ -41,9 +41,9 @@ export default function AuthPage({ register = false }) {
         <label htmlFor="password">ПАРОЛЬ</label>
         <input id="password" name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={register ? 'new-password' : 'current-password'} minLength={8} maxLength={128} required />
         {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="button button-primary auth-submit" type="submit" disabled={busy}>{busy ? 'ПРОВЕРКА…' : register ? 'Зарегистрироваться' : 'Войти'} <span>→</span></button>
+        <button className="button button-primary auth-submit" type="submit" disabled={busy}>{busy ? 'ПРОВЕРКА…' : register ? 'Вступить в ряды' : 'Войти'} <span>→</span></button>
       </form>
-      <p className="auth-switch">{register ? 'Уже есть аккаунт?' : 'Впервые в секторе?'} <Link to={register ? '/login' : '/register'}>{register ? 'Войти' : 'Создать аккаунт'}</Link></p>
+      <p className="auth-switch">{register ? 'Уже есть аккаунт?' : 'Впервые в секторе?'} <Link to={register ? '/login' : '/register'}>{register ? 'Войти' : 'Вступить в ряды'}</Link></p>
     </section>
     <span className="auth-footer">НЕ ПЕРЕДАВАЙ ПАРОЛЬ АРХИВУ. АРХИВУ ДОСТАТОЧНО ЕГО ХЕША.</span>
   </main>

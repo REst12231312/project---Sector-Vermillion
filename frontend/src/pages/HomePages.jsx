@@ -30,7 +30,7 @@ export default function HomePages() {
           <p className="hero-lead">Изучи лор фракций, находи ключевые слова в досье и раскрывай заметки о забытых битвах и новых зонах Sector: Vermillion.</p>
           <div className="hero-actions">
             <Link className="button button-primary" to="/factions">Начать изучение лора <span>↗</span></Link>
-            <Link className="text-link" to={user ? '/archive/sector-ix' : '/register'}>{user ? 'Найденные слова' : 'Сохранить прогресс'} <span>→</span></Link>
+            <Link className="text-link" to={user ? '/archive/sector-ix' : '/register'}>{user ? 'Найденные слова' : 'Вступить в ряды'} <span>→</span></Link>
           </div>
         </div>
         <div className="hero-art" aria-label="Схематичное изображение планеты сектора">

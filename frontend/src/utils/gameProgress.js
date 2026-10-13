@@ -17,10 +17,11 @@ export function getProgress() {
       dailyMission: saved.dailyMission || (localStorage.getItem('sv-daily-mission') === getTodayKey() ? getTodayKey() : null),
       achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
       answeredQuestions: Array.isArray(saved.answeredQuestions) ? saved.answeredQuestions : [],
+      discoveredEntries: Array.isArray(saved.discoveredEntries) ? saved.discoveredEntries : [],
       readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [],
     }
   } catch {
-    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], readEntries: [] }
+    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [] }
   }
 }
 
@@ -31,6 +32,7 @@ export function applyServerProgress(progress) {
     dailyMission: progress.dailyMission || null,
     achievements: Array.isArray(progress.achievements) ? progress.achievements : [],
     answeredQuestions: Array.isArray(progress.answeredQuestions) ? progress.answeredQuestions : [],
+    discoveredEntries: Array.isArray(progress.discoveredEntries) ? progress.discoveredEntries : [],
     readEntries: Array.isArray(progress.readEntries) ? progress.readEntries : [],
   })
 }

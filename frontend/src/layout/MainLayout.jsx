@@ -25,7 +25,7 @@ export default function MainLayout() {
       <nav className="main-nav" aria-label="Основная навигация">
         <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">Фракции</NavLink><NavLink to="/quiz">Испытание</NavLink><NavLink to="/archive/sector-ix">Следы лора</NavLink><NavLink to="/profile">Архив игрока</NavLink>
       </nav>
-      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={() => { clearAuth(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Создать архив</Link></>}</div>
+      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={() => { clearAuth(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
     </header>
     <Outlet />
   </div>

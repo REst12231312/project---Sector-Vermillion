@@ -1,10 +1,12 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { apiRequest, postJson } from '../utils/api'
 import { applyServerProgress } from '../utils/gameProgress'
 import './SealedArchivePage.css'
 
 export default function SealedArchivePage() {
+  const [searchParams] = useSearchParams()
+  const targetEntryId = searchParams.get('entry')
   const [knowledge, setKnowledge] = React.useState(null)
   const [busyId, setBusyId] = React.useState(null)
   const [message, setMessage] = React.useState('Загружаю найденные материалы…')
@@ -18,6 +20,11 @@ export default function SealedArchivePage() {
     refreshKnowledge().then(() => setMessage('Изучай досье фракций, чтобы находить новые термины и записи.'))
       .catch(() => setMessage('Не удалось связаться с архивом. Проверь, что backend запущен.'))
   }, [refreshKnowledge])
+
+  React.useEffect(() => {
+    if (!knowledge || !targetEntryId) return
+    document.getElementById(`entry-${targetEntryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [knowledge, targetEntryId])
 
   async function readEntry(entryId) {
     setBusyId(entryId)
@@ -42,11 +49,11 @@ export default function SealedArchivePage() {
     <Link className="back-link" to="/">← На главную</Link>
     <p className="eyebrow">СЕКТОР VER-IX · АРХИВ ОТКРЫТЫХ СВЕДЕНИЙ</p>
     <h1>Следы и свидетельства</h1>
-    <p className="hero-lead">Вчитывайся в досье фракций: важные слова приведут к полевым заметкам, рассказам о битвах и новым зонам.</p>
+    <p className="hero-lead">Вчитывайся в досье фракций, расшифровывай найденные слова и открывай отдельные полевые записи, свидетельства о битвах и новые зоны.</p>
 
     <section className="discovered-terms">
       <div className="section-heading"><div><p className="eyebrow">СЛОВА, НАЙДЕННЫЕ В ДОСЬЕ</p><h2>Ключевые термины</h2></div><span className="sealed-count">{terms.length} НАЙДЕНО</span></div>
-      {terms.length ? <div className="term-grid">{terms.map((term) => <button className="term-chip" type="button" key={term.entryId} onClick={() => document.getElementById(`entry-${term.entryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><span>{term.category}</span><b>{term.keyword}</b><small>{term.title} →</small></button>)}</div> : <p className="archive-status">Пока нет терминов. Начни с досье Империума, Орков или Хаоса.</p>}
+      {terms.length ? <div className="term-grid">{terms.map((term) => <button className="term-chip" type="button" key={term.entryId} onClick={() => document.getElementById(`entry-${term.entryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><span>{term.category}</span><b>{term.keyword}</b><small>{term.title} →</small></button>)}</div> : <p className="archive-status">Пока нет терминов. Изучи досье фракции, введи кодовое слово и расшифруй первый фрагмент.</p>}
     </section>
 
     <section className="sealed-notes"><div className="section-heading"><div><p className="eyebrow">ПОЛЕВЫЕ МАТЕРИАЛЫ</p><h2>Связанные записи</h2></div><span className="sealed-count">{entries.filter((entry) => entry.read).length}/{entries.length} ПРОЧИТАНО</span></div>
