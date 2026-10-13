@@ -9,9 +9,9 @@ import SealedArchivePage from '../../pages/SealedArchivePage'
 import AuthPage from '../../pages/AuthPage'
 import { isAuthenticated } from '../../utils/api'
 
-function RequireAuth() {
+function RequireAuth({ children }) {
     const location = useLocation()
-    return isAuthenticated() ? <MainLayout /> : <Navigate to="/login" replace state={{ from: location }} />
+    return isAuthenticated() ? children : <Navigate to="/login" replace state={{ from: location }} />
 }
 
 export default function App() {
@@ -21,13 +21,13 @@ export default function App() {
             <Routes>
                 <Route path='/login' element={<AuthPage />} />
                 <Route path='/register' element={<AuthPage register />} />
-                <Route path='/' element={<RequireAuth />}>
+                <Route path='/' element={<MainLayout />}>
                     <Route index element={<HomePages />} />
                     <Route path='factions' element={<FactionPages />} />
                     <Route path='factions/:factionId' element={<FactionPages />} />
-                    <Route path='profile' element={<PlayerPages />} />
-                    <Route path='quiz' element={<QuizPage />} />
-                    <Route path='archive/sector-ix' element={<SealedArchivePage />} />
+                    <Route path='profile' element={<RequireAuth><PlayerPages /></RequireAuth>} />
+                    <Route path='quiz' element={<RequireAuth><QuizPage /></RequireAuth>} />
+                    <Route path='archive/sector-ix' element={<RequireAuth><SealedArchivePage /></RequireAuth>} />
                 </Route>
             </Routes>
         </div>

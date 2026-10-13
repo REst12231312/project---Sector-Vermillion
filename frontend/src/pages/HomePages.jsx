@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { getProgress, getTodayKey } from '../utils/gameProgress'
-import { getCurrentUser } from '../utils/api'
+import { getCurrentUser, isAuthenticated } from '../utils/api'
 
 const factions = [
   { id: 'imperium', name: 'Империум', type: 'Человечество', mark: 'I', color: 'gold', text: 'Миллионы миров держатся под знаменем Человечества.' },
@@ -11,7 +11,7 @@ const factions = [
 ]
 
 export default function HomePages() {
-  const [progress, setProgress] = React.useState(getProgress)
+  const [progress, setProgress] = React.useState(() => isAuthenticated() ? getProgress() : { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], readEntries: [] })
   React.useEffect(() => {
     const updateProgress = (event) => setProgress(event.detail)
     window.addEventListener('sv-progress-updated', updateProgress)
@@ -30,7 +30,7 @@ export default function HomePages() {
           <p className="hero-lead">Изучи лор фракций, находи ключевые слова в досье и раскрывай заметки о забытых битвах и новых зонах Sector: Vermillion.</p>
           <div className="hero-actions">
             <Link className="button button-primary" to="/factions">Начать изучение лора <span>↗</span></Link>
-            <Link className="text-link" to="/archive/sector-ix">Найденные слова <span>→</span></Link>
+            <Link className="text-link" to={user ? '/archive/sector-ix' : '/register'}>{user ? 'Найденные слова' : 'Сохранить прогресс'} <span>→</span></Link>
           </div>
         </div>
         <div className="hero-art" aria-label="Схематичное изображение планеты сектора">

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { FACTION_IDS, getProgress, studyFaction } from '../utils/gameProgress'
+import { isAuthenticated } from '../utils/api'
 
 export const factions = {
   orks: { name: 'Орки', type: 'Ксеносы · Waaagh!', mark: 'W', color: 'green', keyword: 'ВААГХ!', summary: 'Орки — многочисленная зеленокожая раса, чьи яростные набеги способны охватить целые звёздные системы.', home: 'Вся галактика', doctrine: 'Орочьи отряды стремятся навязать противнику ближний бой и задавить его числом. Их военная культура строится вокруг вождей, племён и общего боевого порыва — Waaagh!.', sectorGoal: 'Собрать достаточно племён и сил, чтобы начать крупный Waaagh! в секторе.', source: 'https://www.warhammer-community.com/en-gb/articles/VQFlu0K2/what-is-warhammer-40000/' },
@@ -11,19 +12,20 @@ export const factions = {
 
 export default function FactionPages() {
   const { factionId } = useParams()
-  const [progress, setProgress] = React.useState(getProgress)
+  const [progress, setProgress] = React.useState(() => isAuthenticated() ? getProgress() : { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], readEntries: [] })
   React.useEffect(() => {
     const updateProgress = (event) => setProgress(event.detail)
     window.addEventListener('sv-progress-updated', updateProgress)
     return () => window.removeEventListener('sv-progress-updated', updateProgress)
   }, [])
   React.useEffect(() => {
-    if (factionId && factions[factionId]) studyFaction(factionId)
+    if (isAuthenticated() && factionId && factions[factionId]) studyFaction(factionId)
   }, [factionId])
   if (factionId) {
     const faction = factions[factionId]
     if (!faction) return <main className="content-page"><p className="eyebrow">АРХИВ СЕКТОРА · ОШИБКА 404</p><h1>Досье не найдено</h1><Link className="text-link" to="/factions">Вернуться к фракциям →</Link></main>
-    return <main className="content-page"><Link className="back-link" to="/factions">← Все фракции</Link><section className={`faction-detail ${faction.color}`}><span className="eyebrow">{faction.type} · {progress.studiedFactions.includes(factionId) ? 'ЗАПИСЬ СОХРАНЕНА' : 'НОВАЯ ЗАПИСЬ'}</span><div className="detail-mark">{faction.mark}</div><h1>{faction.name}</h1><p className="detail-lead">{faction.summary}</p><div className="detail-facts"><div><span>РОДНОЙ РЕГИОН</span><b>{faction.home}</b></div><div><span>ЗАПИСЬ АРХИВА</span><b>VER-IX / {factionId.toUpperCase()}</b></div><div><span>ИССЛЕДОВАНИЕ</span><b>+25 XP · {progress.studiedFactions.includes(factionId) ? 'ИЗУЧЕНО' : 'НОВОЕ ДОСЬЕ'}</b></div></div><h2>Доктрина и методы</h2><p>{faction.doctrine}</p><div className="sector-objective"><span className="eyebrow">ИНТЕРЕСЫ В СЕКТОРЕ</span><p>{faction.sectorGoal}</p></div>{faction.keyword && progress.studiedFactions.includes(factionId) && <div className="faction-keyword"><span className="eyebrow">КЛЮЧЕВОЕ СЛОВО НАЙДЕНО</span><b>{faction.keyword}</b><p>Термин открыл связанную запись в архиве сектора.</p><Link className="button button-outline" to="/archive/sector-ix">К найденным материалам <span>→</span></Link></div>}<a className="source-link" href={faction.source} target="_blank" rel="noreferrer">Источник по вселенной: Warhammer Community ↗</a></section></main>
+    const authenticated = isAuthenticated()
+    return <main className="content-page"><Link className="back-link" to="/factions">← Все фракции</Link><section className={`faction-detail ${faction.color}`}><span className="eyebrow">{faction.type} · {authenticated ? (progress.studiedFactions.includes(factionId) ? 'ЗАПИСЬ СОХРАНЕНА' : 'НОВАЯ ЗАПИСЬ') : 'ЧТЕНИЕ ДОСТУПНО'}</span><div className="detail-mark">{faction.mark}</div><h1>{faction.name}</h1><p className="detail-lead">{faction.summary}</p><div className="detail-facts"><div><span>РОДНОЙ РЕГИОН</span><b>{faction.home}</b></div><div><span>ЗАПИСЬ АРХИВА</span><b>VER-IX / {factionId.toUpperCase()}</b></div><div><span>ИССЛЕДОВАНИЕ</span><b>{authenticated ? `+25 XP · ${progress.studiedFactions.includes(factionId) ? 'ИЗУЧЕНО' : 'НОВОЕ ДОСЬЕ'}` : 'ВХОД ДЛЯ СОХРАНЕНИЯ ПРОГРЕССА'}</b></div></div><h2>Доктрина и методы</h2><p>{faction.doctrine}</p><div className="sector-objective"><span className="eyebrow">ИНТЕРЕСЫ В СЕКТОРЕ</span><p>{faction.sectorGoal}</p></div>{authenticated && faction.keyword && progress.studiedFactions.includes(factionId) && <div className="faction-keyword"><span className="eyebrow">КЛЮЧЕВОЕ СЛОВО НАЙДЕНО</span><b>{faction.keyword}</b><p>Термин открыл связанную запись в архиве сектора.</p><Link className="button button-outline" to="/archive/sector-ix">К найденным материалам <span>→</span></Link></div>}{!authenticated && <div className="faction-keyword"><span className="eyebrow">СОХРАНИ СВОИ ОТКРЫТИЯ</span><p>Создай архив, чтобы сохранять найденные слова, заметки и прогресс исследования.</p><Link className="button button-outline" to="/register">Создать архив <span>→</span></Link></div>}<a className="source-link" href={faction.source} target="_blank" rel="noreferrer">Источник по вселенной: Warhammer Community ↗</a></section></main>
   }
   return <main className="content-page"><p className="eyebrow">ДОСЬЕ СЕКТОРА · {String(FACTION_IDS.length).padStart(2, '0')} ЗАПИСИ · ИЗУЧЕНО {progress.studiedFactions.length}/{FACTION_IDS.length}</p><div className="section-heading"><div><h1>Фракции</h1><p className="hero-lead">Силы, претендующие на контроль над галактикой.</p></div></div><div className="faction-grid">{Object.entries(factions).map(([id, faction]) => { const studied = progress.studiedFactions.includes(id); return <Link className={`faction-card ${faction.color}`} to={`/factions/${id}`} key={id}><div className="card-top"><span>{faction.type}</span><span>{studied ? '✓' : '↗'}</span></div><div className="faction-mark">{faction.mark}</div><h3>{faction.name}</h3><p>{faction.summary}</p><span className="card-bottom">{studied ? 'ДОСЬЕ ИЗУЧЕНО' : 'ОТКРЫТЬ ДОСЬЕ'} <span>→</span></span></Link>})}</div></main>
 }
