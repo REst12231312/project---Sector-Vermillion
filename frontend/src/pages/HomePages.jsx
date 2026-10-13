@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { getProgress, getTodayKey } from '../utils/gameProgress'
+import { getCurrentUser } from '../utils/api'
 
 const factions = [
   { id: 'imperium', name: 'Империум', type: 'Человечество', mark: 'I', color: 'gold', text: 'Миллионы миров держатся под знаменем Человечества.' },
@@ -18,17 +19,18 @@ export default function HomePages() {
   }, [])
   const missionComplete = progress.dailyMission === getTodayKey()
   const researched = progress.studiedFactions.length
+  const user = getCurrentUser()
 
   return (
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="signal-dot" /> Сектор отмечен на карте Империума</p>
-          <h1>В мрачной тьме<br /><em>есть место твоей истории.</em></h1>
-          <p className="hero-lead">Изучай фракции, открывай тайны 41-го тысячелетия и оставляй свой след в Sector: Vermillion.</p>
+          <p className="eyebrow"><span className="signal-dot" /> ДОБРО ПОЖАЛОВАТЬ, {user?.username || 'АРХИВАРИУС'}</p>
+          <h1>Сектор ждёт.<br /><em>Начни исследование.</em></h1>
+          <p className="hero-lead">Изучи лор фракций, находи ключевые слова в досье и раскрывай заметки о забытых битвах и новых зонах Sector: Vermillion.</p>
           <div className="hero-actions">
-            <Link className="button button-primary" to="/factions">Изучить фракции <span>↗</span></Link>
-            <Link className="text-link" to="/profile">Мой архив <span>→</span></Link>
+            <Link className="button button-primary" to="/factions">Начать изучение лора <span>↗</span></Link>
+            <Link className="text-link" to="/archive/sector-ix">Найденные слова <span>→</span></Link>
           </div>
         </div>
         <div className="hero-art" aria-label="Схематичное изображение планеты сектора">
@@ -41,7 +43,7 @@ export default function HomePages() {
 
       <section className="mission-strip">
         <div className="mission-icon">✦</div>
-        <div className="mission-copy"><span className="eyebrow">Задание дня · архивариус</span><h2>{missionComplete ? 'Запись дня внесена в архив' : 'Изучи новую фракцию'}</h2><p>{missionComplete ? `Сегодня исследовано фракций: ${researched} из 4.` : 'Открой досье новой фракции и получи награду за исследование.'}</p></div>
+        <div className="mission-copy"><span className="eyebrow">ПЕРВЫЙ ШАГ · ИССЛЕДОВАНИЕ ЛОРА</span><h2>{missionComplete ? 'Сегодняшнее досье изучено' : researched === 0 ? 'Выбери фракцию и начни с её досье' : 'Продолжи искать ключевые слова'}</h2><p>{missionComplete ? `Сегодня исследовано фракций: ${researched} из 4.` : 'Найденные термины открывают полевые заметки, записи о битвах и новые зоны.'}</p></div>
         <div className="mission-reward"><span>НАГРАДА</span><b>{missionComplete ? 'ВЫПОЛНЕНО' : '+50 XP'}</b></div>
         <Link className={`button ${missionComplete ? 'button-done' : 'button-outline'}`} to="/factions">{missionComplete ? 'Продолжить архив' : 'К досье'} <span>→</span></Link>
       </section>

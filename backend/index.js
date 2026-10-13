@@ -18,15 +18,15 @@ if (!fs.existsSync(secretPath)) fs.writeFileSync(secretPath, randomBytes(48).toS
 const authSecret = fs.readFileSync(secretPath, 'utf8').trim()
 const factionIds = ['imperium', 'orks', 'chaos', 'tau']
 const quizAnswers = { 'sector-1': 0, 'sector-2': 0, 'sector-3': 1, 'sector-4': 2 }
-const clueNotes = [
-  { id: 'log-01', factionId: 'imperium', title: 'Запись дозорного', text: 'В полевом конспекте Империума отмечено: сигнал из зоны 07 повторяет один знак — V.', clue: 'V' },
-  { id: 'log-02', factionId: 'orks', title: 'Обрывок астропатического сообщения', text: 'В заметках об орочьем набеге сохранилось: ...ERMILLION... Помехи скрыли первые символы.', clue: 'ERMILLION' },
-  { id: 'log-03', factionId: 'chaos', title: 'Пометка хранителя', text: 'На полях досье о Варпе записано: координаты VER-IX. Римская девятка указывает номер сектора.', clue: 'IX' },
+const loreEntries = [
+  { id: 'neophyte-record', factionId: 'imperium', keyword: 'НЕОФИТ', category: 'ДОСЬЕ', title: 'Рекрут из пепельных доков', body: 'В отчёте гарнизона слово «неофит» стоит рядом с именем безымянного рекрута, спасённого после боя у пепельных доков. На его броне нашли знак сломанного маяка. Он утверждает, что слышал сигнал из-под поверхности планеты.' },
+  { id: 'waaagh-report', factionId: 'orks', keyword: 'ВААГХ!', category: 'ПОЛЕВОЙ ЖУРНАЛ', title: 'Битва у Красного маяка', body: 'Орочий налёт сорвал эвакуацию с доков. В перехваченном крике повторяется «Ваагх!», а карта боя указывает на Красный маяк — тот же знак, что был на броне неофита. После боя маяк продолжил передавать сигнал.' },
+  { id: 'warp-echo', factionId: 'chaos', keyword: 'ВАРП', category: 'ПОВРЕЖДЁННАЯ ЗАПИСЬ', title: 'Шёпот под руинами', body: 'В подземном храме нашли запись культистов о разломе в Варпе. Они пришли к маяку не за артефактом, а чтобы не дать кому-то выйти из стазисной камеры. Последняя строка содержит координату VER-IX.' },
+  { id: 'zone-ver-ix', requiredEntries: ['neophyte-record', 'waaagh-report', 'warp-echo'], keyword: 'VER-IX', category: 'НОВАЯ ЗОНА', title: 'VER-IX · Пепельный маяк', body: 'Архив свёл три свидетельства в одну точку: заброшенный маяк на планете Кайрос-9. Здесь столкнулись гарнизон, орочий налёт и силы Хаоса. Под руинами обнаружена стазисная камера с генетическими маркерами, похожими на маркеры примарха. Имя стёрто из записи.' },
 ]
-const chapter = { id: 'chapter-02', title: 'Глава II · Сигнал из глубины', teaser: 'В зоне VER-IX обнаружен источник повторяющегося сигнала. Кто его отправил — неизвестно.' }
 
 function freshState() {
-  return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], decodedChapters: [], updatedAt: new Date().toISOString() }
+  return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], readEntries: [], updatedAt: new Date().toISOString() }
 }
 function readData() {
   try { return JSON.parse(fs.readFileSync(dataPath, 'utf8')) } catch { return {} }
@@ -37,7 +37,9 @@ function writeData(data) {
 }
 function getState(profileId = 'acolyte') {
   const data = readData()
-  return data[profileId] || freshState()
+  const saved = data[profileId]
+  if (!saved) return freshState()
+  return { ...freshState(), ...saved, readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [] }
 }
 function saveState(profileId, state) {
   const data = readData()
@@ -152,22 +154,25 @@ app.post('/api/quiz', requireAuth, (req, res) => {
   }
   res.json({ correct: true, progress: saveState(req.user.sub, state) })
 })
-app.get('/api/notes', requireAuth, (req, res) => {
+app.get('/api/knowledge', requireAuth, (req, res) => {
   const progress = getState(req.user.sub)
-  res.json(clueNotes.filter((note) => progress.studiedFactions.includes(note.factionId)).map(({ id, title, text }) => ({ id, title, text })))
+  const entries = loreEntries.map((entry) => {
+    const unlocked = entry.factionId ? progress.studiedFactions.includes(entry.factionId) : entry.requiredEntries.every((id) => progress.readEntries.includes(id))
+    return { ...entry, unlocked, read: progress.readEntries.includes(entry.id), body: unlocked ? entry.body : null }
+  })
+  res.json({ terms: entries.filter((entry) => entry.unlocked).map(({ keyword, category, title, id }) => ({ keyword, category, title, entryId: id })), entries })
 })
-app.get('/api/chapters/locked', requireAuth, (req, res) => res.json({ chapter, unlocked: getState(req.user.sub).decodedChapters.includes(chapter.id) }))
-app.post('/api/chapters/locked/decode', requireAuth, (req, res) => {
-  const answer = String(req.body?.answer || '').trim().toUpperCase().replace(/\s+/g, '')
+app.post('/api/knowledge/:entryId/read', requireAuth, (req, res) => {
+  const entry = loreEntries.find((candidate) => candidate.id === req.params.entryId)
+  if (!entry) return res.status(404).json({ error: 'Запись не найдена.' })
   const state = getState(req.user.sub)
-  const requiredNotes = clueNotes.map((note) => note.factionId)
-  if (!requiredNotes.every((factionId) => state.studiedFactions.includes(factionId))) return res.status(403).json({ error: 'Доступ закрыт. Изучи досье, связанные с тремя фрагментами сигнала.' })
-  if (answer !== 'VERMILLIONIX') return res.status(400).json({ error: 'Код не принят. Сверь фрагменты в архивных записях.' })
-  if (!state.decodedChapters.includes(chapter.id)) {
-    state.decodedChapters.push(chapter.id)
-    state.xp += 75
-    if (!state.achievements.includes('signal-decoder')) state.achievements.push('signal-decoder')
+  const unlocked = entry.factionId ? state.studiedFactions.includes(entry.factionId) : entry.requiredEntries.every((id) => state.readEntries.includes(id))
+  if (!unlocked) return res.status(403).json({ error: 'Эта запись пока закрыта. Изучи нужные досье и прочитай связанные материалы.' })
+  if (!state.readEntries.includes(entry.id)) {
+    state.readEntries.push(entry.id)
+    state.xp += entry.category === 'НОВАЯ ЗОНА' ? 50 : 20
+    if (entry.id === 'zone-ver-ix' && !state.achievements.includes('signal-decoder')) state.achievements.push('signal-decoder')
   }
-  res.json({ unlocked: true, chapter: { ...chapter, body: 'Сигнал пришёл не из глубин космоса. Он исходил из заброшенной ретрансляционной станции в самой зоне VER-IX. Последняя запись станции содержит координаты следующего узла, но файл повреждён. Архивариусу предстоит восстановить цепочку маяков, изучая новые досье и собирая фрагменты из полевых заметок.' }, progress: saveState(req.user.sub, state) })
+  res.json({ entry, progress: saveState(req.user.sub, state) })
 })
 app.listen(port, () => console.log(`Sector: Vermillion API listening on http://localhost:${port}`))

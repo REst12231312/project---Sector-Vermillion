@@ -5,43 +5,59 @@ import { applyServerProgress } from '../utils/gameProgress'
 import './SealedArchivePage.css'
 
 export default function SealedArchivePage() {
-  const [notes, setNotes] = React.useState([])
-  const [chapter, setChapter] = React.useState(null)
-  const [unlocked, setUnlocked] = React.useState(false)
-  const [answer, setAnswer] = React.useState('')
-  const [message, setMessage] = React.useState('Загружаю архивные фрагменты…')
+  const [knowledge, setKnowledge] = React.useState(null)
+  const [busyId, setBusyId] = React.useState(null)
+  const [message, setMessage] = React.useState('Загружаю найденные материалы…')
 
-  React.useEffect(() => {
-    Promise.all([apiRequest('/notes'), apiRequest('/chapters/locked')])
-      .then(([archiveNotes, access]) => {
-        setNotes(archiveNotes)
-        setChapter(access.chapter)
-        setUnlocked(access.unlocked)
-        setMessage(archiveNotes.length === 3 ? 'Собери пароль из фрагментов в порядке их номеров.' : `Фрагменты появляются после изучения связанных досье: Империум, Орки и Хаос. Найдено ${archiveNotes.length}/3.`)
-      })
-      .catch(() => setMessage('Сервер архива недоступен. Запусти API командой npm run server.'))
+  const refreshKnowledge = React.useCallback(async () => {
+    const result = await apiRequest('/knowledge')
+    setKnowledge(result)
   }, [])
 
-  async function decode(event) {
-    event.preventDefault()
-    setMessage('Проверяю шифр…')
+  React.useEffect(() => {
+    refreshKnowledge().then(() => setMessage('Изучай досье фракций, чтобы находить новые термины и записи.'))
+      .catch(() => setMessage('Не удалось связаться с архивом. Проверь, что backend запущен.'))
+  }, [refreshKnowledge])
+
+  async function readEntry(entryId) {
+    setBusyId(entryId)
+    setMessage('Открываю запись…')
     try {
-      const result = await postJson('/chapters/locked/decode', { answer })
-      setChapter(result.chapter)
-      setUnlocked(true)
+      const result = await postJson(`/knowledge/${entryId}/read`, {})
       if (result.progress) applyServerProgress(result.progress)
-      setMessage('Допуск подтверждён. В архив внесено +75 XP.')
-    } catch (error) { setMessage(error.message) }
+      await refreshKnowledge()
+      setMessage(`Запись прочитана: +${entryId === 'zone-ver-ix' ? '50' : '20'} XP.`)
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setBusyId(null)
+    }
   }
 
+  const entries = knowledge?.entries || []
+  const terms = knowledge?.terms || []
+  const zone = entries.find((entry) => entry.id === 'zone-ver-ix')
+
   return <main className="content-page sealed-page">
-    <Link className="back-link" to="/profile">← Вернуться в личный архив</Link>
-    <p className="eyebrow">СЕКТОР VER-IX · ХРАНИЛИЩЕ КЛАССИФИЦИРОВАННЫХ ДАННЫХ</p>
-    <h1>Зашифрованный сигнал</h1>
-    <p className="hero-lead">Следующая глава закрыта шифром. Ищи подсказки в найденных конспектах и сопоставь фрагменты по порядку.</p>
-    <section className="sealed-notes"><div className="section-heading"><div><p className="eyebrow">ПОЛЕВЫЕ МАТЕРИАЛЫ</p><h2>Найденные конспекты</h2></div><span className="sealed-count">{notes.length} ФРАГМЕНТА</span></div>
-      {notes.length ? <div className="note-grid">{notes.map((note, index) => <article className="field-note" key={note.id}><span className="note-index">ФРАГМЕНТ · {note.id.slice(-2).toUpperCase()}</span><h3>{note.title}</h3><p>{note.text}</p></article>)}</div> : <p className="archive-status">{message}</p>}
+    <Link className="back-link" to="/">← На главную</Link>
+    <p className="eyebrow">СЕКТОР VER-IX · АРХИВ ОТКРЫТЫХ СВЕДЕНИЙ</p>
+    <h1>Следы и свидетельства</h1>
+    <p className="hero-lead">Вчитывайся в досье фракций: важные слова приведут к полевым заметкам, рассказам о битвах и новым зонам.</p>
+
+    <section className="discovered-terms">
+      <div className="section-heading"><div><p className="eyebrow">СЛОВА, НАЙДЕННЫЕ В ДОСЬЕ</p><h2>Ключевые термины</h2></div><span className="sealed-count">{terms.length} НАЙДЕНО</span></div>
+      {terms.length ? <div className="term-grid">{terms.map((term) => <button className="term-chip" type="button" key={term.entryId} onClick={() => document.getElementById(`entry-${term.entryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><span>{term.category}</span><b>{term.keyword}</b><small>{term.title} →</small></button>)}</div> : <p className="archive-status">Пока нет терминов. Начни с досье Империума, Орков или Хаоса.</p>}
     </section>
-    {!unlocked ? <form className="decode-panel" onSubmit={decode}><div><span className="eyebrow">ПРОТОКОЛ ДОСТУПА</span><h2>Введи ключ расшифровки</h2><p>Соедини три фрагмента из уже изученных досье.</p></div><div className="decode-controls"><input aria-label="Ключ расшифровки" value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder="КОД ДОСТУПА" autoComplete="off"/><button className="button button-primary" type="submit" disabled={notes.length < 3}>Проверить код <span>→</span></button></div><span className="archive-status" role="status">{message}</span></form> : <section className="decoded-chapter"><p className="eyebrow">ДОПУСК ОТКРЫТ · {chapter?.id}</p><h2>{chapter?.title}</h2><p>{chapter?.body}</p><Link className="button button-outline" to="/profile">К наградам архива <span>→</span></Link></section>}
+
+    <section className="sealed-notes"><div className="section-heading"><div><p className="eyebrow">ПОЛЕВЫЕ МАТЕРИАЛЫ</p><h2>Связанные записи</h2></div><span className="sealed-count">{entries.filter((entry) => entry.read).length}/{entries.length} ПРОЧИТАНО</span></div>
+      <div className="note-grid">{entries.map((entry) => <article className={`field-note ${entry.unlocked ? 'available' : 'locked'} ${entry.category === 'НОВАЯ ЗОНА' ? 'zone-note' : ''}`} id={`entry-${entry.id}`} key={entry.id}>
+        <span className="note-index">{entry.unlocked ? entry.category : 'ЗАПИСЬ ЗАШИФРОВАНА'}</span>
+        <h3>{entry.unlocked ? entry.title : 'Неизвестный материал'}</h3>
+        {entry.read ? <><p>{entry.body}</p><span className="entry-read">ЗАПИСЬ ВНЕСЕНА В АРХИВ</span></> : entry.unlocked ? <><p>Найден термин: <b>{entry.keyword}</b>. Прочитай запись, чтобы связать эту зацепку с историей сектора.</p><button className="button button-outline" type="button" onClick={() => readEntry(entry.id)} disabled={busyId === entry.id}>{busyId === entry.id ? 'ОТКРЫВАЮ…' : `Открыть запись · +${entry.category === 'НОВАЯ ЗОНА' ? '50' : '20'} XP`}</button></> : <p>{entry.id === 'zone-ver-ix' ? 'Прочитай все открытые записи — и сопоставь их свидетельства.' : 'Изучи досье связанной фракции, чтобы обнаружить ключевое слово.'}</p>}
+      </article>)}</div>
+    </section>
+
+    {zone?.read && <p className="archive-lore-note">Заметка о VER-IX — авторский сюжет Sector: Vermillion. Упоминание примарха в повреждённом отчёте является частью этой истории, а не официальным каноном Warhammer 40,000.</p>}
+    <p className="archive-status" role="status">{message}</p>
   </main>
 }
