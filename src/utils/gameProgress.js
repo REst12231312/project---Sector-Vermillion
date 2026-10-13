@@ -1,3 +1,4 @@
+import { postJson } from './api'
 const STORAGE_KEY = 'sv-progress'
 export const FACTION_IDS = ['imperium', 'orks', 'chaos', 'tau']
 export const QUIZ_IDS = ['sector-1', 'sector-2', 'sector-3', 'sector-4']
@@ -20,6 +21,16 @@ export function getProgress() {
   } catch {
     return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [] }
   }
+}
+
+export function applyServerProgress(progress) {
+  return saveProgress({
+    xp: Number(progress.xp) || 0,
+    studiedFactions: Array.isArray(progress.studiedFactions) ? progress.studiedFactions : [],
+    dailyMission: progress.dailyMission || null,
+    achievements: Array.isArray(progress.achievements) ? progress.achievements : [],
+    answeredQuestions: Array.isArray(progress.answeredQuestions) ? progress.answeredQuestions : [],
+  })
 }
 
 function saveProgress(progress) {
@@ -49,10 +60,18 @@ export function studyFaction(factionId) {
   }
   if (!achievements.includes('first-dossier')) achievements.push('first-dossier')
 
-  return saveProgress({ ...progress, xp, studiedFactions, dailyMission, achievements })
+  const updated = saveProgress({ ...progress, xp, studiedFactions, dailyMission, achievements })
+  postJson(`/study/${factionId}`, {}).then(applyServerProgress).catch(() => {})
+  return updated
 }
 
-export function submitQuizAnswer(questionId) {
+export async function submitQuizAnswer(questionId, answerIndex) {
+  try {
+    const result = await postJson('/quiz', { questionId, answerIndex })
+    if (result.progress) return saveProgress(result.progress)
+  } catch (error) {
+    if (error.message.includes('Ответ неверный')) throw error
+  }
   const progress = getProgress()
   if (progress.answeredQuestions.includes(questionId) || !QUIZ_IDS.includes(questionId)) return progress
 

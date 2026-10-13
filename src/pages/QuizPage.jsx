@@ -23,15 +23,17 @@ export default function QuizPage() {
   const answered = progress.answeredQuestions.length
   const current = questions.find((question) => !progress.answeredQuestions.includes(question.id))
 
-  function submit() {
+  async function submit() {
     if (!current || choice === null) return
     if (choice !== current.answer) {
       setFeedback('Ответ неверный. Перечитай досье и попробуй ещё раз.')
       return
     }
-    submitQuizAnswer(current.id)
-    setChoice(null)
-    setFeedback('Верно. Архив пополнен: +15 XP.')
+    try {
+      await submitQuizAnswer(current.id, choice)
+      setChoice(null)
+      setFeedback('Верно. Архив пополнен: +15 XP.')
+    } catch (error) { setFeedback(error.message) }
   }
 
   return <main className="content-page quiz-page">

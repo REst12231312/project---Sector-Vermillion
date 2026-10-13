@@ -1,70 +1,31 @@
-# Getting Started with Create React App
+# Sector: Vermillion
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Учебный игровой сайт по вселенной Warhammer 40,000. Игрок изучает досье, получает опыт, проходит испытание и открывает продолжение истории, собрав код из полевых заметок.
 
-## Available Scripts
+## Запуск
 
-In the project directory, you can run:
+Нужен Node.js 18 или новее.
 
-### `npm start`
+1. Установить зависимости интерфейса: `npm install`.
+2. Установить зависимости API: `npm --prefix server install`.
+3. Запустить API в отдельном окне терминала: `npm run server` (порт 4000).
+4. Запустить интерфейс во втором окне: `npm start` (порт 3000).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Без запущенного API обычные страницы продолжают работать с локальным прогрессом браузера, но проверка шифра требует сервера.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Игровая цепочка
 
-### `npm test`
+Страница «Сигнал» собирает фрагменты из конспектов досье Империума, Орков и Хаоса. После изучения всех трёх появляются части `V` + `ERMILLION` + `IX` → `VERMILLIONIX`. Успешный ответ открывает главу II и выдаёт 75 XP. Сервер проверяет наличие изученных досье и введённый код. Очки и состояние игрока хранятся в `server/data/progress.json` по идентификатору браузерного профиля.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## API
 
-### `npm run build`
+- `GET /api/health` — состояние сервиса.
+- `GET /api/progress?profile=…` — прогресс игрока.
+- `POST /api/progress/sync` — перенос сохранённого локального прогресса.
+- `POST /api/study/:factionId` — запись изученного досье и награда.
+- `POST /api/quiz` — серверная проверка ответа и выдача опыта.
+- `GET /api/notes` — конспекты с фрагментами кода.
+- `GET /api/chapters/locked?profile=…` — состояние доступа.
+- `POST /api/chapters/locked/decode` — проверка кода и открытие главы.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Это учебный прототип без регистрации и полноценной аутентификации: профиль привязан к этому браузеру. Для публикации с реальными аккаунтами нужно добавить учётные записи, проверку сессий и базу данных.
