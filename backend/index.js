@@ -187,7 +187,7 @@ app.get('/api/progress', requireAuth, (req, res) => res.json(getState(req.user.s
 app.get('/api/lore/:factionId/fragments', (req, res) => {
   const fragments = loreEntries.filter((entry) => entry.factionId === req.params.factionId)
   if (!fragments.length) return res.status(404).json({ error: 'Досье фракции не найдено.' })
-  res.json({ fragments: fragments.map(({ id, hint, cipherText }) => ({ id, hint, cipherText })) })
+  res.json({ fragments: fragments.map(({ id, keyword, hint, cipherText }) => ({ id, keyword, hint, cipherText })) })
 })
 app.post('/api/study/:factionId', requireAuth, (req, res) => {
   const state = getState(req.user.sub)
@@ -221,8 +221,6 @@ app.get('/api/knowledge', requireAuth, (req, res) => {
 app.post('/api/knowledge/:entryId/discover', requireAuth, (req, res) => {
   const entry = loreEntries.find((candidate) => candidate.id === req.params.entryId && candidate.factionId)
   if (!entry) return res.status(404).json({ error: 'Ключевой фрагмент не найден.' })
-  const normalize = (value) => String(value || '').trim().toLocaleUpperCase('ru-RU').replace(/Ё/g, 'Е').replace(/\s+/g, ' ')
-  if (normalize(req.body?.answer) !== normalize(entry.keyword)) return res.status(400).json({ error: 'Кодовое слово не совпало. Сверь подсказку с досье и попробуй ещё раз.' })
   const state = getState(req.user.sub)
   if (!state.discoveredEntries.includes(entry.id)) {
     state.discoveredEntries.push(entry.id)
