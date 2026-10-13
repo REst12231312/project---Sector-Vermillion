@@ -1,6 +1,6 @@
 import { postJson } from './api'
 const STORAGE_KEY = 'sv-progress'
-export const FACTION_IDS = ['imperium']
+export const FACTION_IDS = ['imperium', 'chaos']
 export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs']
 export const CHAOS_LEVEL_IDS = ['chaos-whispers', 'davin-fall', 'istvaan-betrayal', 'siege-terra']
 export const FACTION_DETAILS = {
@@ -15,12 +15,22 @@ export const IMPERIUM_RANKS = [
   { id: 'captain', name: 'Капитан', minXP: 300 },
   { id: 'magister', name: 'Магистр', minXP: 400 },
 ]
+export const CHAOS_RANKS = [
+  { id: 'cultist', name: 'Культист', minXP: 0 },
+  { id: 'initiated', name: 'Посвящённый', minXP: 100 },
+  { id: 'chosen', name: 'Избранный Хаоса', minXP: 200 },
+  { id: 'champion', name: 'Чемпион Хаоса', minXP: 300 },
+  { id: 'chaos-lord', name: 'Лорд Хаоса', minXP: 400 },
+]
 
-export function getImperiumRank(xp = 0) {
+export function getFactionRank(xp = 0, faction = 'imperium') {
+  const ranks = faction === 'chaos' ? CHAOS_RANKS : IMPERIUM_RANKS
   const currentXP = Math.max(0, Number(xp) || 0)
-  const rankIndex = IMPERIUM_RANKS.reduce((found, rank, index) => currentXP >= rank.minXP ? index : found, 0)
-  return { ...IMPERIUM_RANKS[Math.max(0, rankIndex)], next: IMPERIUM_RANKS[rankIndex + 1] || null }
+  const rankIndex = ranks.reduce((found, rank, index) => currentXP >= rank.minXP ? index : found, 0)
+  return { ...ranks[Math.max(0, rankIndex)], next: ranks[rankIndex + 1] || null }
 }
+
+export const getImperiumRank = (xp = 0) => getFactionRank(xp, 'imperium')
 
 export function getTodayKey() {
   const date = new Date()
