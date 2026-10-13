@@ -1,6 +1,7 @@
 import { postJson } from './api'
 const STORAGE_KEY = 'sv-progress'
-export const FACTION_IDS = ['imperium', 'orks', 'chaos', 'tau']
+export const FACTION_IDS = ['imperium']
+export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs']
 export const QUIZ_IDS = ['sector-1', 'sector-2', 'sector-3', 'sector-4']
 
 export function getTodayKey() {
@@ -19,9 +20,10 @@ export function getProgress() {
       answeredQuestions: Array.isArray(saved.answeredQuestions) ? saved.answeredQuestions : [],
       discoveredEntries: Array.isArray(saved.discoveredEntries) ? saved.discoveredEntries : [],
       readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [],
+      completedLevels: Array.isArray(saved.completedLevels) ? saved.completedLevels : [],
     }
   } catch {
-    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [] }
+    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [], completedLevels: [] }
   }
 }
 
@@ -34,6 +36,7 @@ export function applyServerProgress(progress) {
     answeredQuestions: Array.isArray(progress.answeredQuestions) ? progress.answeredQuestions : [],
     discoveredEntries: Array.isArray(progress.discoveredEntries) ? progress.discoveredEntries : [],
     readEntries: Array.isArray(progress.readEntries) ? progress.readEntries : [],
+    completedLevels: Array.isArray(progress.completedLevels) ? progress.completedLevels : [],
   })
 }
 

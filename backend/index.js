@@ -16,7 +16,8 @@ const scrypt = promisify(scryptCallback)
 fs.mkdirSync(path.dirname(secretPath), { recursive: true })
 if (!fs.existsSync(secretPath)) fs.writeFileSync(secretPath, randomBytes(48).toString('hex'), { flag: 'wx' })
 const authSecret = fs.readFileSync(secretPath, 'utf8').trim()
-const factionIds = ['imperium', 'orks', 'chaos', 'tau']
+const factionIds = ['imperium']
+const imperiumLevelIds = ['imperium-origin', 'great-crusade', 'primarchs']
 const quizAnswers = { 'sector-1': 0, 'sector-2': 0, 'sector-3': 1, 'sector-4': 2 }
 const factionFragments = {
   imperium: [
@@ -75,7 +76,7 @@ const loreEntries = Object.entries(factionFragments).flatMap(([factionId, fragme
 loreEntries.push({ id: 'zone-ver-ix', requiredEntries: ['neophyte-record', 'waaagh-report', 'warp-echo'], keyword: 'VER-IX', category: 'НОВАЯ ЗОНА', title: 'VER-IX · Пепельный маяк', body: 'Архив свёл три свидетельства в одну точку: заброшенный маяк на планете Кайрос-9. Здесь столкнулись гарнизон, орочий налёт и силы Хаоса. Под руинами обнаружена стазисная камера с генетическими маркерами, похожими на маркеры примарха. Имя стёрто из записи.' })
 
 function freshState() {
-  return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [], updatedAt: new Date().toISOString() }
+  return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [], completedLevels: [], updatedAt: new Date().toISOString() }
 }
 function readData() {
   try { return JSON.parse(fs.readFileSync(dataPath, 'utf8')) } catch { return {} }
@@ -88,7 +89,7 @@ function getState(profileId = 'acolyte') {
   const data = readData()
   const saved = data[profileId]
   if (!saved) return freshState()
-  return { ...freshState(), ...saved, discoveredEntries: Array.isArray(saved.discoveredEntries) ? saved.discoveredEntries : [], readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [] }
+  return { ...freshState(), ...saved, discoveredEntries: Array.isArray(saved.discoveredEntries) ? saved.discoveredEntries : [], readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [], completedLevels: Array.isArray(saved.completedLevels) ? saved.completedLevels : [] }
 }
 function saveState(profileId, state) {
   const data = readData()
@@ -184,6 +185,22 @@ app.post('/api/auth/login', async (req, res) => {
 })
 app.get('/api/auth/me', requireAuth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username } }))
 app.get('/api/progress', requireAuth, (req, res) => res.json(getState(req.user.sub)))
+app.post('/api/campaign/complete', requireAuth, (req, res) => {
+  const { levelId } = req.body || {}
+  const levelIndex = imperiumLevelIds.indexOf(levelId)
+  if (levelIndex < 0) return res.status(404).json({ error: 'Операция не найдена.' })
+  const state = getState(req.user.sub)
+  if (levelIndex > 0 && !state.completedLevels.includes(imperiumLevelIds[levelIndex - 1])) {
+    return res.status(403).json({ error: 'Сначала заверши предыдущую операцию.' })
+  }
+  if (!state.completedLevels.includes(levelId)) {
+    state.completedLevels.push(levelId)
+    state.xp += 100
+    const achievement = `campaign-${levelId}`
+    if (!state.achievements.includes(achievement)) state.achievements.push(achievement)
+  }
+  res.json(saveState(req.user.sub, state))
+})
 app.get('/api/lore/:factionId/fragments', (req, res) => {
   const fragments = loreEntries.filter((entry) => entry.factionId === req.params.factionId)
   if (!fragments.length) return res.status(404).json({ error: 'Досье фракции не найдено.' })
