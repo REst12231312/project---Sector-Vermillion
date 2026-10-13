@@ -16,8 +16,11 @@ const scrypt = promisify(scryptCallback)
 fs.mkdirSync(path.dirname(secretPath), { recursive: true })
 if (!fs.existsSync(secretPath)) fs.writeFileSync(secretPath, randomBytes(48).toString('hex'), { flag: 'wx' })
 const authSecret = fs.readFileSync(secretPath, 'utf8').trim()
-const factionIds = ['imperium']
-const imperiumLevelIds = ['imperium-origin', 'great-crusade', 'primarchs']
+const factionIds = ['imperium', 'chaos']
+const campaignLevelIds = {
+  imperium: ['imperium-origin', 'great-crusade', 'primarchs'],
+  chaos: ['chaos-whispers', 'davin-fall', 'istvaan-betrayal', 'siege-terra'],
+}
 const quizAnswers = { 'sector-1': 0, 'sector-2': 0, 'sector-3': 1, 'sector-4': 2 }
 const factionFragments = {
   imperium: [
@@ -111,7 +114,7 @@ function writeUsers(users) {
 function makeToken(user) {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
   const header = encode({ alg: 'HS256', typ: 'JWT' })
-  const payload = encode({ sub: user.id, username: user.username, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 })
+  const payload = encode({ sub: user.id, username: user.username, faction: user.faction || 'imperium', exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 })
   const unsigned = `${header}.${payload}`
   const signature = createHmac('sha256', authSecret).update(unsigned).digest('base64url')
   return `${unsigned}.${signature}`
@@ -160,17 +163,19 @@ app.get('/api/health', (_req, res) => res.json({ status: 'online', service: 'Sec
 app.post('/api/auth/register', async (req, res) => {
   const username = String(req.body?.username || '').trim().toLowerCase()
   const password = String(req.body?.password || '')
+  const faction = String(req.body?.faction || 'imperium')
   if (!/^[a-z0-9_]{3,24}$/.test(username)) return res.status(400).json({ error: 'Имя: 3–24 символа, только латиница, цифры и _.' })
   if (password.length < 8 || password.length > 128) return res.status(400).json({ error: 'Пароль должен содержать от 8 до 128 символов.' })
+  if (!factionIds.includes(faction)) return res.status(400).json({ error: 'Выбери доступную фракцию.' })
   const users = readUsers()
   if (users.some((user) => user.username === username)) return res.status(409).json({ error: 'Это имя уже занято. Выбери другое или войди.' })
   const id = randomBytes(16).toString('hex')
   const salt = randomBytes(16).toString('hex')
   const passwordHash = (await scrypt(password, salt, 64)).toString('hex')
-  const user = { id, username, salt, passwordHash, createdAt: new Date().toISOString() }
+  const user = { id, username, faction, salt, passwordHash, createdAt: new Date().toISOString() }
   users.push(user)
   writeUsers(users)
-  res.status(201).json({ token: makeToken(user), user: { id, username } })
+  res.status(201).json({ token: makeToken(user), user: { id, username, faction } })
 })
 app.post('/api/auth/login', async (req, res) => {
   const username = String(req.body?.username || '').trim().toLowerCase()
@@ -181,16 +186,19 @@ app.post('/api/auth/login', async (req, res) => {
   const expected = Buffer.from(user.passwordHash, 'hex')
   const provided = Buffer.from(passwordHash, 'hex')
   if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) return res.status(401).json({ error: 'Неверное имя или пароль.' })
-  res.json({ token: makeToken(user), user: { id: user.id, username: user.username } })
+  if (!user.faction) user.faction = 'imperium'
+  res.json({ token: makeToken(user), user: { id: user.id, username: user.username, faction: user.faction } })
 })
-app.get('/api/auth/me', requireAuth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username } }))
+app.get('/api/auth/me', requireAuth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username, faction: req.user.faction || 'imperium' } }))
 app.get('/api/progress', requireAuth, (req, res) => res.json(getState(req.user.sub)))
 app.post('/api/campaign/complete', requireAuth, (req, res) => {
   const { levelId } = req.body || {}
-  const levelIndex = imperiumLevelIds.indexOf(levelId)
+  const faction = factionIds.includes(req.user.faction) ? req.user.faction : 'imperium'
+  const levelIds = campaignLevelIds[faction]
+  const levelIndex = levelIds.indexOf(levelId)
   if (levelIndex < 0) return res.status(404).json({ error: 'Операция не найдена.' })
   const state = getState(req.user.sub)
-  if (levelIndex > 0 && !state.completedLevels.includes(imperiumLevelIds[levelIndex - 1])) {
+  if (levelIndex > 0 && !state.completedLevels.includes(levelIds[levelIndex - 1])) {
     return res.status(403).json({ error: 'Сначала заверши предыдущую операцию.' })
   }
   if (!state.completedLevels.includes(levelId)) {

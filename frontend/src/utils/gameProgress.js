@@ -2,6 +2,11 @@ import { postJson } from './api'
 const STORAGE_KEY = 'sv-progress'
 export const FACTION_IDS = ['imperium']
 export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs']
+export const CHAOS_LEVEL_IDS = ['chaos-whispers', 'davin-fall', 'istvaan-betrayal', 'siege-terra']
+export const FACTION_DETAILS = {
+  imperium: { name: 'Империум человечества', shortName: 'Империум', mark: 'I', levelIds: IMPERIUM_LEVEL_IDS, archivePath: '/archive/imperium' },
+  chaos: { name: 'Силы Хаоса', shortName: 'Хаос', mark: '⛧', levelIds: CHAOS_LEVEL_IDS, archivePath: '/archive/chaos' },
+}
 export const QUIZ_IDS = ['sector-1', 'sector-2', 'sector-3', 'sector-4']
 export const IMPERIUM_RANKS = [
   { id: 'neophyte', name: 'Неофит', minXP: 0 },

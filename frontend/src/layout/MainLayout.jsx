@@ -2,10 +2,12 @@ import React from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { applyServerProgress } from '../utils/gameProgress'
 import { apiRequest, clearAuth, getCurrentUser, isAuthenticated } from '../utils/api'
+import { FACTION_DETAILS } from '../utils/gameProgress'
 
 export default function MainLayout() {
   const navigate = useNavigate()
   const user = getCurrentUser()
+  const faction = FACTION_DETAILS[user?.faction === 'chaos' ? 'chaos' : 'imperium']
   const authenticated = isAuthenticated()
   const [ready, setReady] = React.useState(!authenticated)
   const [xp, setXp] = React.useState(() => Number(localStorage.getItem('sv-xp') || 0))
@@ -23,7 +25,7 @@ export default function MainLayout() {
     <header className="site-header">
       <NavLink to="/" className="brand"><span className="brand-seal">V</span><span><b>SECTOR</b><small>VERMILLION · 41K</small></span></NavLink>
       <nav className="main-nav" aria-label="Основная навигация">
-        <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">Империум</NavLink><NavLink to="/campaign">Кампания</NavLink><NavLink to="/archive/imperium">Досье</NavLink><NavLink to="/profile">Архив игрока</NavLink>
+        <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">{faction.shortName}</NavLink><NavLink to="/campaign">Кампания</NavLink><NavLink to={faction.archivePath}>Досье</NavLink><NavLink to="/profile">Архив игрока</NavLink>
       </nav>
       <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={() => { clearAuth(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
     </header>

@@ -28,8 +28,8 @@ export default function App() {
                     <Route path='profile' element={<RequireAuth><PlayerPages /></RequireAuth>} />
                     <Route path='campaign' element={<RequireAuth><QuizPage /></RequireAuth>} />
                     <Route path='quiz' element={<Navigate to='/campaign' replace />} />
-                    <Route path='archive/imperium' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />
-                    <Route path='archive/imperium/:recordId' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />
+                    <Route path='archive/:factionId' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />
+                    <Route path='archive/:factionId/:recordId' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />
                 </Route>
             </Routes>
         </div>
