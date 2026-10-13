@@ -17,6 +17,7 @@ export default function FactionPages() {
   const navigate = useNavigate()
   const [progress, setProgress] = React.useState(() => isAuthenticated() ? getProgress() : emptyProgress)
   const [fragments, setFragments] = React.useState([])
+  const [feedback, setFeedback] = React.useState({})
   const [message, setMessage] = React.useState('')
 
   React.useEffect(() => {
@@ -31,6 +32,7 @@ export default function FactionPages() {
 
   React.useEffect(() => {
     setFragments([])
+    setFeedback({})
     setMessage('')
     if (!factionId || !factions[factionId]) return
     apiRequest(`/lore/${factionId}/fragments`)
@@ -38,7 +40,7 @@ export default function FactionPages() {
       .catch(() => setMessage('Сканер фрагментов недоступен. Проверь, что сервер архива запущен.'))
   }, [factionId])
 
-  async function openFragment(fragment) {
+  async function chooseFragment(fragment, choiceId) {
     if (progress.discoveredEntries?.includes(fragment.id)) {
       navigate(`/archive/sector-ix?entry=${encodeURIComponent(fragment.id)}`)
       return
@@ -47,13 +49,13 @@ export default function FactionPages() {
       setMessage('Чтобы сохранить найденное слово и открыть его архив, сначала вступи в ряды.')
       return
     }
-    setMessage('Сохраняю найденный след…')
+    setFeedback({ ...feedback, [fragment.id]: 'Сверяю свидетельство…' })
     try {
-      const result = await postJson(`/knowledge/${fragment.id}/discover`, {})
+      const result = await postJson(`/knowledge/${fragment.id}/discover`, { choiceId })
       if (result.progress) applyServerProgress(result.progress)
       navigate(`/archive/sector-ix?entry=${encodeURIComponent(fragment.id)}`)
     } catch (error) {
-      setMessage(error.message)
+      setFeedback({ ...feedback, [fragment.id]: error.message })
     }
   }
 
@@ -80,18 +82,20 @@ export default function FactionPages() {
       </section>
 
       <section className="fragment-hunt">
-        <div className="section-heading"><div><p className="eyebrow">СКАНЕР ПЕРЕХВАТОВ · {factionId.toUpperCase()}</p><h2>Слова и находки</h2></div><span className="sealed-count">{foundCount}/{fragments.length || 10} ФРАГМЕНТОВ</span></div>
-        <p className="hero-lead">Каждое слово сопровождается простым объяснением. Выбирай интересный термин и открывай связанную запись — специальные знания о Warhammer не нужны.</p>
-        {!authenticated && <p className="archive-status">Читать досье и знакомиться с терминами можно без входа. Чтобы открывать отдельные записи и сохранять находки, <Link to="/register">вступи в ряды</Link>.</p>}
+        <div className="section-heading"><div><p className="eyebrow">СКАНЕР ПЕРЕХВАТОВ · {factionId.toUpperCase()}</p><h2>Расшифруй свидетельство</h2></div><span className="sealed-count">{foundCount}/{fragments.length || 10} ФРАГМЕНТОВ</span></div>
+        <p className="hero-lead">Прочитай короткое сообщение и выбери подходящее понятие. У каждого варианта есть простое объяснение — это игра на внимательность, а не проверка знаний о Warhammer.</p>
+        {!authenticated && <p className="archive-status">Досье и варианты можно изучить без входа. Чтобы сохранять найденные следы и открывать записи, <Link to="/register">вступи в ряды</Link>.</p>}
         <div className="fragment-grid">{fragments.map((fragment, index) => {
           const discovered = progress.discoveredEntries?.includes(fragment.id)
+          const answer = fragment.choices?.find((choice) => choice.choiceId === fragment.id)
           return <article className={`fragment-card ${discovered ? 'fragment-found' : ''}`} key={fragment.id}>
-            <span className="note-index">{discovered ? 'СЛЕД СОХРАНЁН' : `СЛОВО ${String(index + 1).padStart(2, '0')} · ФРАГМЕНТ`}</span>
-            <h3 className="fragment-term">{fragment.keyword}</h3>
+            <span className="note-index">{discovered ? 'СВИДЕТЕЛЬСТВО РАСШИФРОВАНО' : `ФРАГМЕНТ ${String(index + 1).padStart(2, '0')} · ПЕРЕХВАТ`}</span>
             <p className="fragment-cipher">{fragment.cipherText}</p>
-            <p className="fragment-hint"><b>Простыми словами:</b> {fragment.hint}</p>
-            <button className="button button-outline" type="button" onClick={() => openFragment(fragment)}>{discovered ? 'Открыть запись' : 'Открыть связанный архив'} <span>→</span></button>
-            {discovered && <small className="entry-read">ЗАПИСЬ ДОБАВЛЕНА В АРХИВ</small>}
+            {discovered ? <><h3 className="fragment-term">{answer?.keyword}</h3><p className="fragment-hint">{answer?.explanation}</p><button className="button button-outline" type="button" onClick={() => navigate(`/archive/sector-ix?entry=${encodeURIComponent(fragment.id)}`)}>Перейти к записи <span>→</span></button><small className="entry-read">ЗАПИСЬ ДОБАВЛЕНА В АРХИВ</small></> : <>
+              <p className="fragment-question">Какое понятие подходит к этому сообщению?</p>
+              <div className="fragment-choices">{fragment.choices?.map((choice) => <button className="fragment-choice" type="button" key={choice.choiceId} onClick={() => chooseFragment(fragment, choice.choiceId)}><b>{choice.keyword}</b><span>{choice.explanation}</span></button>)}</div>
+              {feedback[fragment.id] && <p className="fragment-feedback" role="status">{feedback[fragment.id]}</p>}
+            </>}
           </article>
         })}</div>
         {message && <p className="archive-status" role="status">{message}</p>}

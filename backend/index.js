@@ -187,7 +187,13 @@ app.get('/api/progress', requireAuth, (req, res) => res.json(getState(req.user.s
 app.get('/api/lore/:factionId/fragments', (req, res) => {
   const fragments = loreEntries.filter((entry) => entry.factionId === req.params.factionId)
   if (!fragments.length) return res.status(404).json({ error: 'Досье фракции не найдено.' })
-  res.json({ fragments: fragments.map(({ id, keyword, hint, cipherText }) => ({ id, keyword, hint, cipherText })) })
+  const choices = fragments.map((entry, index) => {
+    const options = [entry, fragments[(index + 3) % fragments.length], fragments[(index + 7) % fragments.length]]
+      .map(({ id, keyword, hint }) => ({ choiceId: id, keyword, explanation: hint }))
+      .sort(() => Math.random() - 0.5)
+    return { id: entry.id, cipherText: entry.cipherText, choices }
+  })
+  res.json({ fragments: choices })
 })
 app.post('/api/study/:factionId', requireAuth, (req, res) => {
   const state = getState(req.user.sub)
@@ -221,6 +227,7 @@ app.get('/api/knowledge', requireAuth, (req, res) => {
 app.post('/api/knowledge/:entryId/discover', requireAuth, (req, res) => {
   const entry = loreEntries.find((candidate) => candidate.id === req.params.entryId && candidate.factionId)
   if (!entry) return res.status(404).json({ error: 'Ключевой фрагмент не найден.' })
+  if (req.body?.choiceId !== entry.id) return res.status(400).json({ error: 'Это понятие не совпадает с фрагментом. Перечитай сообщение и попробуй другой вариант.' })
   const state = getState(req.user.sub)
   if (!state.discoveredEntries.includes(entry.id)) {
     state.discoveredEntries.push(entry.id)
