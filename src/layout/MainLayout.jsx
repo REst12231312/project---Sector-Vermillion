@@ -12,7 +12,7 @@ export default function MainLayout() {
     <header className="site-header">
       <NavLink to="/" className="brand"><span className="brand-seal">V</span><span><b>SECTOR</b><small>VERMILLION · 41K</small></span></NavLink>
       <nav className="main-nav" aria-label="Основная навигация">
-        <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">Фракции</NavLink><NavLink to="/profile">Архив игрока</NavLink>
+        <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">Фракции</NavLink><NavLink to="/quiz">Испытание</NavLink><NavLink to="/profile">Архив игрока</NavLink>
       </nav>
       <NavLink to="/profile" className="player-chip"><span className="player-avatar">A</span><span><small>АКОЛИТ</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink>
     </header>

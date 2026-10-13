@@ -46,6 +46,8 @@ export default function HomePages() {
         <Link className={`button ${missionComplete ? 'button-done' : 'button-outline'}`} to="/factions">{missionComplete ? 'Продолжить архив' : 'К досье'} <span>→</span></Link>
       </section>
 
+      <section className="quiz-promo"><div className="quiz-promo-mark">IV</div><div><p className="eyebrow">ПОЛЕВОЕ ИСПЫТАНИЕ · 4 ВОПРОСА</p><h2>Проверь знания о фракциях</h2><p>Пополняй архив ответами и получи бонус за завершение.</p></div><Link className="button button-outline" to="/quiz">Начать испытание <span>→</span></Link></section>
+
       <section className="section-block">
         <div className="section-heading"><div><p className="eyebrow">Досье сектора</p><h2>Силы, меняющие галактику</h2></div><Link className="text-link" to="/factions">Все фракции <span>→</span></Link></div>
         <div className="faction-grid">{factions.map((faction, index) => <Link className={`faction-card ${faction.color}`} to={`/factions/${faction.id}`} key={faction.id}><div className="card-top"><span>ДОСЬЕ 0{index + 1}</span><span>↗</span></div><div className="faction-mark">{faction.mark}</div><span className="faction-type">{faction.type}</span><h3>{faction.name}</h3><p>{faction.text}</p><span className="card-bottom">ОТКРЫТЬ ДОСЬЕ <span>→</span></span></Link>)}</div>

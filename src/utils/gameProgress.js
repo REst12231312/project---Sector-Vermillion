@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'sv-progress'
 export const FACTION_IDS = ['imperium', 'orks', 'chaos', 'tau']
+export const QUIZ_IDS = ['sector-1', 'sector-2', 'sector-3', 'sector-4']
 
 export function getTodayKey() {
   const date = new Date()
@@ -14,9 +15,10 @@ export function getProgress() {
       studiedFactions: Array.isArray(saved.studiedFactions) ? saved.studiedFactions : [],
       dailyMission: saved.dailyMission || (localStorage.getItem('sv-daily-mission') === getTodayKey() ? getTodayKey() : null),
       achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
+      answeredQuestions: Array.isArray(saved.answeredQuestions) ? saved.answeredQuestions : [],
     }
   } catch {
-    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [] }
+    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [] }
   }
 }
 
@@ -47,5 +49,19 @@ export function studyFaction(factionId) {
   }
   if (!achievements.includes('first-dossier')) achievements.push('first-dossier')
 
-  return saveProgress({ xp, studiedFactions, dailyMission, achievements })
+  return saveProgress({ ...progress, xp, studiedFactions, dailyMission, achievements })
+}
+
+export function submitQuizAnswer(questionId) {
+  const progress = getProgress()
+  if (progress.answeredQuestions.includes(questionId) || !QUIZ_IDS.includes(questionId)) return progress
+
+  const answeredQuestions = [...progress.answeredQuestions, questionId]
+  const achievements = [...progress.achievements]
+  let xp = progress.xp + 15
+  if (answeredQuestions.length === QUIZ_IDS.length && !achievements.includes('quiz-complete')) {
+    achievements.push('quiz-complete')
+    xp += 50
+  }
+  return saveProgress({ ...progress, xp, answeredQuestions, achievements })
 }
