@@ -2,7 +2,7 @@
 /frontend/build
 /frontend/coverage
 /backend/node_modules
-/backend/data/progress.json
+/backend/data/
 .env*
 npm-debug.log*
 yarn-error.log*
