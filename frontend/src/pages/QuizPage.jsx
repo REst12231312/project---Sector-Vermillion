@@ -8,6 +8,11 @@ import './QuizPage.css'
 const freshMeters = () => ({ supplies: 2, unity: 1, intel: 1 })
 const meterNames = { supplies: 'Снабжение', unity: 'Поддержка', intel: 'Разведданные' }
 const effectsFor = (effect) => Object.entries(effect).map(([key, value]) => `${value > 0 ? '+' : ''}${value} ${meterNames[key].toLowerCase()}`).join(' · ')
+const campaignAwards = {
+  'imperium-origin': { id: 'campaign-imperium-origin', icon: 'I', name: 'Объединитель Терры', description: 'Операция «Объединение Терры» завершена.' },
+  'great-crusade': { id: 'campaign-great-crusade', icon: 'II', name: 'Навигатор Великого похода', description: 'Операция Великого крестового похода завершена.' },
+  primarchs: { id: 'campaign-primarchs', icon: 'III', name: 'Собиратель сыновей', description: 'Операция по поиску Примархов завершена.' },
+}
 
 export default function QuizPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -17,6 +22,7 @@ export default function QuizPage() {
   const [result, setResult] = React.useState(null)
   const [busy, setBusy] = React.useState(false)
   const [feedback, setFeedback] = React.useState('')
+  const [achievementPopup, setAchievementPopup] = React.useState(null)
   const selectedLevel = searchParams.get('level')
   const level = campaignLevels.find((item) => item.id === selectedLevel)
   const completedLevels = progress.completedLevels || []
@@ -35,6 +41,12 @@ export default function QuizPage() {
     setResult(null)
     setFeedback('')
   }, [selectedLevel])
+
+  React.useEffect(() => {
+    if (!achievementPopup) return undefined
+    const timeout = window.setTimeout(() => setAchievementPopup(null), 7000)
+    return () => window.clearTimeout(timeout)
+  }, [achievementPopup])
 
   function leaveLevel() {
     setSearchParams({})
@@ -70,6 +82,8 @@ export default function QuizPage() {
     try {
       const savedProgress = await postJson('/campaign/complete', { levelId: level.id })
       applyServerProgress(savedProgress)
+      const award = campaignAwards[level.id]
+      if (award && !progress.achievements.includes(award.id) && savedProgress.achievements?.includes(award.id)) setAchievementPopup(award)
       setResult('success')
       setFeedback('Операция успешна. Доступ к новому досье открыт.')
     } catch (error) {
@@ -83,6 +97,7 @@ export default function QuizPage() {
     const scene = level.scenes[sceneIndex]
     const alreadyComplete = completedLevels.includes(level.id)
     return <main className="content-page campaign-page">
+      {achievementPopup && <aside className="achievement-toast" role="status" aria-live="polite"><span className="achievement-icon">{achievementPopup.icon}</span><div><span className="eyebrow">НОВОЕ БОЕВОЕ ОТЛИЧИЕ</span><b>{achievementPopup.name}</b><small>{achievementPopup.description}</small></div><button type="button" aria-label="Закрыть уведомление" onClick={() => setAchievementPopup(null)}>×</button></aside>}
       <button className="back-link campaign-back" type="button" onClick={leaveLevel}>← Карта кампании</button>
       <p className="eyebrow">ОПЕРАЦИЯ {level.number} · {level.subtitle.toUpperCase()}</p>
       <h1>{level.title}</h1>

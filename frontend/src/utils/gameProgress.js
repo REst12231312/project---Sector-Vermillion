@@ -3,6 +3,19 @@ const STORAGE_KEY = 'sv-progress'
 export const FACTION_IDS = ['imperium']
 export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs']
 export const QUIZ_IDS = ['sector-1', 'sector-2', 'sector-3', 'sector-4']
+export const IMPERIUM_RANKS = [
+  { id: 'neophyte', name: 'Неофит', minXP: 0 },
+  { id: 'battle-brother', name: 'Боевой брат', minXP: 100 },
+  { id: 'lieutenant', name: 'Лейтенант', minXP: 200 },
+  { id: 'captain', name: 'Капитан', minXP: 300 },
+  { id: 'magister', name: 'Магистр', minXP: 400 },
+]
+
+export function getImperiumRank(xp = 0) {
+  const currentXP = Math.max(0, Number(xp) || 0)
+  const rankIndex = IMPERIUM_RANKS.reduce((found, rank, index) => currentXP >= rank.minXP ? index : found, 0)
+  return { ...IMPERIUM_RANKS[Math.max(0, rankIndex)], next: IMPERIUM_RANKS[rankIndex + 1] || null }
+}
 
 export function getTodayKey() {
   const date = new Date()
