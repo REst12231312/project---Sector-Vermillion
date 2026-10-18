@@ -1,0 +1,44 @@
+.tau-theme {
+  --gold: #73b4c9;
+  --accent: #4d91aa;
+}
+
+.tau-theme .campaign-level-index,
+.tau-theme .campaign-action b,
+.tau-theme .campaign-meter > div:first-child b {
+  color: #8bc6d8;
+}
+
+.tau-theme .campaign-scene,
+.tau-theme .campaign-result,
+.tau-theme .campaign-level {
+  border-color: #3d6572;
+}
+
+.tau-theme .campaign-note,
+.tau-theme .campaign-next-hint {
+  border-color: #4d91aa;
+}
+
+.tau-theme .rank-progress-track span {
+  background: #4d91aa;
+}
+
+.tau-theme.profile-card {
+  border-color: #3d6572;
+}
+
+.tau-theme .profile-avatar,
+.tau-theme .profile-xp b {
+  color: #8bc6d8;
+  border-color: #4d91aa;
+}
+
+.signal-option.signal-tau {
+  border-color: #3d6572;
+  background: linear-gradient(145deg, #19252a, #171916);
+}
+
+.signal-tau .signal-option-faction {
+  color: #8bc6d8;
+}

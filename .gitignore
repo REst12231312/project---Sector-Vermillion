@@ -2,7 +2,8 @@
 /frontend/build
 /frontend/coverage
 /backend/node_modules
-/backend/data/
+/backend/data/*
+!/backend/data/gameData.js
 .env*
 npm-debug.log*
 yarn-error.log*

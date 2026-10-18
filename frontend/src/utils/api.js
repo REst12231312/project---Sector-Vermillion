@@ -15,6 +15,13 @@ export function saveAuth(auth) {
   localStorage.setItem(USER_KEY, JSON.stringify(auth.user))
 }
 
+export function updateCurrentUser(user) {
+  const updated = { ...getCurrentUser(), ...user }
+  localStorage.setItem(USER_KEY, JSON.stringify(updated))
+  window.dispatchEvent(new CustomEvent('sv-user-updated', { detail: updated }))
+  return updated
+}
+
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)

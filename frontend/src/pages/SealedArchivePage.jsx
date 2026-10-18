@@ -49,15 +49,16 @@ export default function SealedArchivePage() {
     <Link className="back-link" to="/">← На главную</Link>
     <p className="eyebrow">СЕКТОР VER-IX · АРХИВ ОТКРЫТЫХ СВЕДЕНИЙ</p>
     <h1>Следы и свидетельства</h1>
-    <p className="hero-lead">Вчитывайся в досье фракций, расшифровывай найденные слова и открывай отдельные полевые записи, свидетельства о битвах и новые зоны.</p>
+    <p className="hero-lead">Вчитывайся в досье фракций и открывай отдельные полевые записи, свидетельства о битвах и новые зоны.</p>
 
     <section className="discovered-terms">
       <div className="section-heading"><div><p className="eyebrow">СЛОВА, НАЙДЕННЫЕ В ДОСЬЕ</p><h2>Ключевые термины</h2></div><span className="sealed-count">{terms.length} НАЙДЕНО</span></div>
-      {terms.length ? <div className="term-grid">{terms.map((term) => <button className="term-chip" type="button" key={term.entryId} onClick={() => document.getElementById(`entry-${term.entryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><span>{term.category}</span><b>{term.keyword}</b><small>{term.title} →</small></button>)}</div> : <p className="archive-status">Пока нет терминов. Изучи досье фракции, введи кодовое слово и расшифруй первый фрагмент.</p>}
+      {terms.length ? <div className="term-grid">{terms.map((term) => <button className="term-chip" type="button" key={term.entryId} onClick={() => document.getElementById(`entry-${term.entryId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><span>{term.category}</span><b>{term.keyword}</b><small>{term.title} →</small></button>)}</div> : <p className="archive-status">Пока нет терминов. Изучи досье фракции, чтобы открыть её записи.</p>}
     </section>
 
     <section className="sealed-notes"><div className="section-heading"><div><p className="eyebrow">ПОЛЕВЫЕ МАТЕРИАЛЫ</p><h2>Связанные записи</h2></div><span className="sealed-count">{entries.filter((entry) => entry.read).length}/{entries.length} ПРОЧИТАНО</span></div>
       <div className="note-grid">{entries.map((entry) => <article className={`field-note ${entry.unlocked ? 'available' : 'locked'} ${entry.category === 'НОВАЯ ЗОНА' ? 'zone-note' : ''}`} id={`entry-${entry.id}`} key={entry.id}>
+        <img className="dossier-illustration" src={`/images/dossiers/${entry.id}.svg`} alt={entry.unlocked ? `Иллюстрация: ${entry.title}` : 'Иллюстрация к закрытому досье'} loading="lazy" decoding="async" />
         <span className="note-index">{entry.unlocked ? entry.category : 'ЗАПИСЬ ЗАШИФРОВАНА'}</span>
         <h3>{entry.unlocked ? entry.title : 'Неизвестный материал'}</h3>
         {entry.read ? <><p>{entry.body}</p><span className="entry-read">ЗАПИСЬ ВНЕСЕНА В АРХИВ</span></> : entry.unlocked ? <><p>Найден термин: <b>{entry.keyword}</b>. Прочитай запись, чтобы связать эту зацепку с историей сектора.</p><button className="button button-outline" type="button" onClick={() => readEntry(entry.id)} disabled={busyId === entry.id}>{busyId === entry.id ? 'ОТКРЫВАЮ…' : `Открыть запись · +${entry.category === 'НОВАЯ ЗОНА' ? '50' : '20'} XP`}</button></> : <p>{entry.id === 'zone-ver-ix' ? 'Прочитай все открытые записи — и сопоставь их свидетельства.' : 'Изучи досье связанной фракции, чтобы обнаружить ключевое слово.'}</p>}

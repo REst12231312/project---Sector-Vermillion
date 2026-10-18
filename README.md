@@ -5,7 +5,11 @@
 ## Структура
 
 - `frontend/` — React-приложение.
-- `backend/` — Express API и серверная игровая логика.
+- `backend/app.js` и `backend/index.js` — настройка Express и запуск API.
+- `backend/routes/` — HTTP-маршруты.
+- `backend/services/` — авторизация и игровая бизнес-логика.
+- `backend/storage.js` — чтение и запись JSON-хранилища.
+- `backend/data/gameData.js` — игровые справочники; `progress.json`, `users.json` и ключ авторизации хранятся отдельно в той же папке и не добавляются в Git.
 
 ## Запуск в Windows PowerShell
 
