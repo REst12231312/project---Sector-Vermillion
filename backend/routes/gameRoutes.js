@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { loreEntries } from '../data/gameData.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { defectToChaos } from '../services/authService.js'
-import { updateUserOnlineIdentity } from '../storage.js'
+import { recordMatchHistory, updateUserOnlineIdentity } from '../services/userRepository.js'
 import {
   cancelQueue, createPrivateRoom, getMatch, getPrivateRoom, joinPrivateRoom,
   leavePrivateRoom, performMatchAction, queueForMatch, readyForRematch,
@@ -19,13 +19,13 @@ const onlineChoices = {
   chaos: { legion: ['black-legion', 'word-bearers', 'world-eaters', 'death-guard', 'emperors-children', 'thousand-sons', 'night-lords', 'iron-warriors', 'alpha-legion'] },
 }
 router.get('/progress', requireAuth, (req, res) => res.json(getState(req.user.sub)))
-router.put('/online-profile', requireAuth, (req, res) => {
+router.put('/online-profile', requireAuth, async (req, res) => {
   const faction = req.user.faction
   const field = faction === 'imperium' ? 'chapter' : faction === 'chaos' ? 'legion' : null
   const value = String(req.body?.value || '')
   if (!field) return res.status(409).json({ error: 'Для этой фракции нет выбора ордена или легиона.' })
   if (value && !onlineChoices[faction][field].includes(value)) return res.status(400).json({ error: 'Такой вариант недоступен.' })
-  const user = updateUserOnlineIdentity(req.user.sub, { [field]: value })
+  const user = await updateUserOnlineIdentity(req.user.sub, { [field]: value })
   if (!user) return res.status(404).json({ error: 'Профиль не найден.' })
   res.json({ user: { id: user.id, username: user.username, faction, chapter: user.onlineIdentity?.chapter || '', legion: user.onlineIdentity?.legion || '' } })
 })
@@ -68,19 +68,25 @@ router.post('/online/rooms/:code/rematch', requireAuth, (req, res) => {
   if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
   res.json(result)
 })
-router.get('/online/matches/:matchId', requireAuth, (req, res) => {
+async function persistFinishedMatch(match) {
+  if (match?.status === 'finished') await recordMatchHistory(match)
+}
+router.get('/online/matches/:matchId', requireAuth, async (req, res) => {
   const match = getMatch(req.params.matchId, req.user.sub)
   if (!match) return res.status(404).json({ error: 'Операция не найдена или доступ к ней закрыт.' })
+  await persistFinishedMatch(match)
   res.json({ match })
 })
-router.post('/online/matches/:matchId/presence', requireAuth, (req, res) => {
+router.post('/online/matches/:matchId/presence', requireAuth, async (req, res) => {
   const match = getMatch(req.params.matchId, req.user.sub)
   if (!match) return res.status(404).json({ error: 'Операция не найдена или доступ к ней закрыт.' })
+  await persistFinishedMatch(match)
   res.json({ match })
 })
-router.post('/online/matches/:matchId/actions', requireAuth, (req, res) => {
+router.post('/online/matches/:matchId/actions', requireAuth, async (req, res) => {
   const result = performMatchAction(req.params.matchId, req.user.sub, req.body?.type, req.body?.payload, req.body?.actionId)
   if (result.error) return res.status(result.status || 400).json({ error: result.error })
+  await persistFinishedMatch(result.match)
   res.json(result)
 })
 router.post('/campaign/complete', requireAuth, (req, res) => {
@@ -88,8 +94,8 @@ router.post('/campaign/complete', requireAuth, (req, res) => {
   if (result.error) return res.status(result.status).json({ error: result.error })
   res.json(result.state)
 })
-router.post('/campaign/defect', requireAuth, (req, res) => {
-  const result = defectToChaos(req.user.sub, req.body || {})
+router.post('/campaign/defect', requireAuth, async (req, res) => {
+  const result = await defectToChaos(req.user.sub, req.body || {})
   const { status, ...body } = result
   res.status(status).json(body)
 })

@@ -1,0 +1,33 @@
+.account-settings,.online-battle-record{max-width:850px;margin-top:24px;padding:23px;border:1px solid var(--line);background:linear-gradient(135deg,#191b18,#151714)}
+.account-settings .section-heading,.online-battle-record .section-heading{margin-bottom:15px}
+.account-settings .section-heading h2,.online-battle-record .section-heading h2{margin:0;font:600 25px var(--display);text-transform:uppercase}
+.account-settings-form,.account-password-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.account-settings-form>label,.account-password-form>label{display:grid;gap:7px;color:var(--muted);font:10px var(--mono);letter-spacing:1px}
+.account-settings-form input,.account-settings-form select,.account-password-form input{width:100%;padding:12px;background:#10120f;color:var(--ink);border:1px solid #47473e;font:14px var(--mono)}
+.account-settings-form input:focus,.account-settings-form select:focus,.account-password-form input:focus{outline:1px solid var(--gold);border-color:var(--gold)}
+.account-avatar-picker{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding:0;border:0}
+.account-avatar-picker legend{width:100%;margin-bottom:5px;color:var(--muted);font:10px var(--mono);letter-spacing:1px}
+.account-avatar-picker label{min-width:77px;display:grid;justify-items:center;gap:5px;padding:9px;border:1px solid var(--line);cursor:pointer;color:var(--muted)}
+.account-avatar-picker label.is-selected{border-color:var(--gold);color:var(--gold);background:#252017}
+.account-avatar-picker input{position:absolute;opacity:0;pointer-events:none}
+.account-avatar-picker label span{font:25px var(--display)}.account-avatar-picker label small{font:9px var(--mono)}
+.account-settings-form>.button{justify-self:start}
+.account-password-form{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
+.account-password-form h3{grid-column:1/-1;margin:0;color:var(--ink);font:600 17px var(--display);text-transform:uppercase}
+.account-password-form>.button{align-self:end;justify-self:start}
+.account-settings>.online-error,.account-settings>.online-notice{margin:14px 0 0}
+.online-battle-record .battle-record-stats{grid-template-columns:repeat(5,minmax(0,1fr));max-width:none;margin:0}
+.online-battle-record .battle-record-stats article{padding:15px}
+.online-battle-record .battle-record-stats article>b{font-size:27px}
+.online-battle-record .battle-record-stats article>b.stat-rank{font-size:15px;line-height:1.35}
+.match-history-list{display:grid;margin-top:15px;border-top:1px solid var(--line)}
+.match-history-item{display:grid;grid-template-columns:90px minmax(0,1fr) 160px;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--line)}
+.match-history-result{font:10px var(--mono);letter-spacing:.7px;color:#83aa69}
+.match-history-item.is-defeat .match-history-result{color:#c36c61}
+.match-history-item>div{display:grid;gap:5px;min-width:0}
+.match-history-item>div b{font-size:13px;color:var(--ink);overflow-wrap:anywhere}
+.match-history-item small,.match-history-item>span:last-child,.match-history-empty,.match-history-list>p{font-size:11px;color:var(--muted)}
+.match-history-item>span:last-child{text-align:right}
+.match-history-empty{padding:12px 0}
+@media(max-width:850px){.online-battle-record .battle-record-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.account-settings,.online-battle-record{padding:17px}.account-settings-form,.account-password-form{grid-template-columns:1fr}.account-password-form h3{grid-column:auto}.account-avatar-picker{grid-column:auto}.match-history-item{grid-template-columns:80px minmax(0,1fr);gap:9px}.match-history-item>span:last-child{grid-column:2;text-align:left}.online-battle-record .battle-record-stats{grid-template-columns:1fr 1fr}}

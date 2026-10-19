@@ -1,14 +1,14 @@
 import React from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { applyServerProgress } from '../utils/gameProgress'
-import { apiRequest, clearAuth, getCurrentUser, isAuthenticated } from '../utils/api'
+import { apiRequest, getCurrentUser, isAuthenticated, logout } from '../utils/api'
 import { FACTION_DETAILS } from '../utils/gameProgress'
 import SignalIntercept from './SignalIntercept'
 
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const user = getCurrentUser()
+  const [user, setUser] = React.useState(getCurrentUser)
   const faction = FACTION_DETAILS[user?.faction] || FACTION_DETAILS.imperium
   const authenticated = isAuthenticated()
   const routeParts = location.pathname.split('/').filter(Boolean)
@@ -21,6 +21,11 @@ export default function MainLayout() {
     return () => window.removeEventListener('sv-progress-updated', updateProgress)
   }, [])
   React.useEffect(() => {
+    const updateUser = (event) => setUser(event.detail || getCurrentUser())
+    window.addEventListener('sv-user-updated', updateUser)
+    return () => window.removeEventListener('sv-user-updated', updateUser)
+  }, [])
+  React.useEffect(() => {
     if (!isAuthenticated()) return
     apiRequest('/progress').then(applyServerProgress).catch(() => {}).finally(() => setReady(true))
   }, [])
@@ -31,7 +36,7 @@ export default function MainLayout() {
       <nav className="main-nav" aria-label="Основная навигация">
         <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">{faction.shortName}</NavLink><NavLink to="/campaign">Кампания</NavLink><NavLink to={faction.archivePath}>Досье</NavLink><NavLink to="/profile">Архив игрока</NavLink>
       </nav>
-      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={() => { clearAuth(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
+      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={async () => { await logout(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
     </header>
     <Outlet />
     {studyingLore && <SignalIntercept />}

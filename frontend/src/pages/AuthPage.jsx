@@ -5,6 +5,7 @@ import './AuthPage.css'
 
 export default function AuthPage({ register = false }) {
   const [username, setUsername] = React.useState('')
+  const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [faction, setFaction] = React.useState('imperium')
   const [error, setError] = React.useState('')
@@ -19,7 +20,7 @@ export default function AuthPage({ register = false }) {
     setBusy(true)
     setError('')
     try {
-      const result = await postJson(register ? '/auth/register' : '/auth/login', { username, password, faction })
+      const result = await postJson(register ? '/auth/register' : '/auth/login', { username, email, password, faction })
       saveAuth(result)
       navigate(location.state?.from?.pathname || '/', { replace: true })
     } catch (requestError) {
@@ -36,9 +37,9 @@ export default function AuthPage({ register = false }) {
       <h1>{register ? 'Вступить в ряды' : 'Войти в архив'}</h1>
       <p className="auth-intro">{register ? 'Зарегистрируй позывной и выбери сторону конфликта. От выбора зависит кампания и архивные досье.' : 'Введи позывной и пароль, чтобы продолжить исследование сектора.'}</p>
       <form className="auth-form" onSubmit={submit}>
-        <label htmlFor="username">ПОЗЫВНОЙ</label>
-        <input id="username" name="username" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" required />
-        <small>3–24 символа: латинские буквы, цифры или _</small>
+        <label htmlFor="username">{register ? 'ПОЗЫВНОЙ' : 'ПОЗЫВНОЙ ИЛИ EMAIL'}</label>
+        <input id="username" name="username" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" minLength={register ? 3 : undefined} maxLength={register ? 24 : 254} pattern={register ? '[A-Za-z0-9_]+' : undefined} required />
+        {register && <><small>3–24 символа: латинские буквы, цифры или _</small><label htmlFor="email">EMAIL</label><input id="email" name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" maxLength={254} required /></>}
           {register && <><label htmlFor="faction">СТОРОНА КОНФЛИКТА</label><select className="faction-bar" id="faction" name="faction" value={faction} onChange={(event) => setFaction(event.target.value)}><option value="imperium">Империум человечества</option><option value="chaos">Хаос</option><option value="orks">Орки</option><option value="tau">Империя Тау</option></select><small>Выбор определяет доступные операции и архивные досье.</small></>}
         <label htmlFor="password">ПАРОЛЬ</label>
         <input id="password" name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={register ? 'new-password' : 'current-password'} minLength={8} maxLength={128} required />

@@ -1,6 +1,6 @@
 import {
   availableAttacks, availableMoves, applyBattleAction, calculateWoundTarget,
-  createBattle, COVER, CONTROL_POINT_CELLS, FACTIONS, MAP_SIZE, OBSTACLES,
+  createBattle, FACTIONS, MAPS, MAP_SIZE, OBSTACLES,
 } from '../game/battleEngine.js'
 
 const args = process.argv.slice(2)
@@ -23,7 +23,8 @@ function makeRandom(seed) {
   }
 }
 
-function boardDistance(from, to, occupied = new Set()) {
+function boardDistance(from, to, occupied = new Set(), obstacles = OBSTACLES) {
+  const obstacleSet = new Set(obstacles.map((cell) => Array.isArray(cell) ? `${cell[0]},${cell[1]}` : `${cell.x},${cell.y}`))
   const queue = [{ ...from, distance: 0 }]
   const visited = new Set([`${from.x},${from.y}`])
   for (let head = 0; head < queue.length; head += 1) {
@@ -32,8 +33,8 @@ function boardDistance(from, to, occupied = new Set()) {
     for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
       if (!dx && !dy) continue
       const x = current.x + dx, y = current.y + dy, key = `${x},${y}`
-      if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE || visited.has(key) || occupied.has(key) || OBSTACLES.some(([ox, oy]) => ox === x && oy === y)) continue
-      if (dx && dy && OBSTACLES.some(([ox, oy]) => ox === current.x && oy === y) && OBSTACLES.some(([ox, oy]) => ox === x && oy === current.y)) continue
+      if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE || visited.has(key) || occupied.has(key) || obstacleSet.has(key)) continue
+      if (dx && dy && obstacleSet.has(`${current.x},${y}`) && obstacleSet.has(`${x},${current.y}`)) continue
       visited.add(key)
       queue.push({ x, y, distance: current.distance + 1 })
     }
@@ -46,19 +47,33 @@ function attackValue(state, attack) {
   const target = state.units.find((candidate) => candidate.id === attack.targetUnitId)
   if (!attacker || !target) return 0
   const weapon = attacker.weapons[attack.weaponType]
-  const hitChance = Math.max(0, 7 - weapon.skill) / 6
-  const woundChance = (7 - calculateWoundTarget(weapon.strength, target.toughness)) / 6
-  const saveTarget = target.save - weapon.ap - (attack.weaponType === 'ranged' && COVER.some(([x, y]) => x === target.x && y === target.y) ? 1 : 0)
+  const player = state.players[attacker.playerIndex]
+  const abilityUsed = attack.useAbility === true
+  const orkMobBonus = player.faction === 'orks' && attack.weaponType === 'melee' && state.units.some((ally) => ally.id !== attacker.id && ally.hp > 0 && ally.playerIndex === attacker.playerIndex && Math.max(Math.abs(ally.x - attacker.x), Math.abs(ally.y - attacker.y)) === 1) ? 1 : 0
+  const chaosWoundedBonus = player.faction === 'chaos' && attack.weaponType === 'melee' && attacker.hp <= attacker.maxHp / 2 ? 1 : 0
+  const strength = weapon.strength + (abilityUsed && player.faction === 'chaos' ? 1 : 0) + chaosWoundedBonus
+  const hitSkill = Math.max(2, weapon.skill - (abilityUsed && player.faction === 'tau' ? 1 : 0))
+  const hitChance = Math.max(0, 7 - hitSkill) / 6
+  const woundChance = (7 - calculateWoundTarget(strength, target.toughness)) / 6
+  const cover = state.cover.some((cell) => cell.x === target.x && cell.y === target.y)
+  const onImperiumPoint = state.players[target.playerIndex].faction === 'imperium' && state.controlPoints.some((point) => point.x === target.x && point.y === target.y && point.ownerIndex === target.playerIndex)
+  const saveTarget = target.save - weapon.ap - (attack.weaponType === 'ranged' && (cover || onImperiumPoint) && !(abilityUsed && player.faction === 'tau') ? 1 : 0)
   const failSave = saveTarget > 6 ? 1 : Math.max(1 / 6, (saveTarget - 1) / 6)
   const damage = Math.min(weapon.damage, target.hp)
-  return weapon.attacks * hitChance * woundChance * failSave * damage + (damage >= target.hp ? 0.35 : 0)
+  let attacks = weapon.attacks + orkMobBonus + (abilityUsed && player.faction === 'orks' ? 2 : 0)
+  let expectedHits = attacks * hitChance
+  if (abilityUsed && player.faction === 'imperium') expectedHits += 1 - hitChance
+  const expected = expectedHits * woundChance * failSave * damage
+  return expected + (damage >= target.hp ? 0.35 : 0)
 }
 
 function chooseAttack(state, playerId, unitId) {
   const units = state.units.filter((unit) => unit.id === unitId && unit.playerIndex === state.activePlayer && unit.hp > 0 && !unit.hasAttacked)
   let best = null
   for (const unit of units) for (const option of availableAttacks(state, playerId, unit.id)) {
-    const candidate = { ...option, unitId: unit.id, attackerUnitId: unit.id }
+      const player = state.players[state.activePlayer]
+      const useAbility = !player.factionAbilityUsed && (player.faction !== 'orks' || option.weaponType === 'melee') && (player.faction !== 'tau' || option.weaponType === 'ranged')
+      const candidate = { ...option, unitId: unit.id, attackerUnitId: unit.id, useAbility }
     const value = attackValue(state, candidate)
     if (!best || value > best.value) best = { ...candidate, value }
   }
@@ -105,11 +120,11 @@ function pursueObjective(state, playerId, unitId, objective) {
   let best = null
   for (const move of moves) {
     let path = Infinity
-    for (const goal of goals) path = Math.min(path, boardDistance(move, goal, occupied))
+    for (const goal of goals) path = Math.min(path, boardDistance(move, goal, occupied, state.obstacles))
     if (!best || path < best.path) best = { ...move, path }
   }
   if (!best || !Number.isFinite(best.path)) return state
-  const oldDistance = Math.min(...goals.map((goal) => boardDistance(unit, goal, occupied)))
+  const oldDistance = Math.min(...goals.map((goal) => boardDistance(unit, goal, occupied, state.obstacles)))
   if (best.path >= oldDistance) return state
   return applyBattleAction(state, playerId, 'move', { unitId, x: best.x, y: best.y }).state
 }
@@ -147,7 +162,8 @@ function simulate(index) {
     { userId: 'player-0', username: factionNames[matchup[0]], faction: matchup[0] },
     { userId: 'player-1', username: factionNames[matchup[1]], faction: matchup[1] },
   ]
-  let state = createBattle({ id: `simulation-${index}`, players, firstPlayerIndex, topPlayerIndex, reverseObjectives })
+  const map = MAPS[index % MAPS.length]
+  let state = createBattle({ id: `simulation-${index}`, players, firstPlayerIndex, topPlayerIndex, reverseObjectives, mapId: map.id })
   let turns = 0
   while (state.status === 'active' && state.turn <= maxTurns) {
     const current = state.players[state.activePlayer]
@@ -165,6 +181,8 @@ function simulate(index) {
   return {
     winnerFaction, turns, reason: state.winReason || (winnerIndex === null ? 'draw' : 'timeout'),
     matchup,
+    mapId: map.id,
+    abilityUses: state.players.filter((player) => player.factionAbilityUsed).length,
     attackCount: state.stats?.attackActions || 0,
     damageDealt: state.stats?.damage || 0,
     destroyedUnits: state.stats?.destroyedUnits || 0,
@@ -175,8 +193,8 @@ function simulate(index) {
   }
 }
 
-function shortestRouteAssignment(starts, points) {
-  const distances = starts.map((start) => points.map((point) => boardDistance({ x: start[0], y: start[1] }, { x: point[0], y: point[1] })))
+function shortestRouteAssignment(starts, points, obstacles) {
+  const distances = starts.map((start) => points.map((point) => boardDistance({ x: start[0], y: start[1] }, { x: point[0], y: point[1] }, new Set(), obstacles)))
   const assignments = []
   const visit = (unitIndex, used, total) => {
     if (unitIndex === starts.length) { assignments.push(total); return }
@@ -190,30 +208,36 @@ function shortestRouteAssignment(starts, points) {
 
 function printMapAnalysis() {
   const starts = [[2, 0], [5, 0], [8, 0]]
-  const points = CONTROL_POINT_CELLS
-  const top = shortestRouteAssignment(starts, points)
-  const bottom = shortestRouteAssignment([[9, MAP_SIZE - 1], [6, MAP_SIZE - 1], [3, MAP_SIZE - 1]], points)
-  const mirroredPoints = points.map(([x, y]) => [MAP_SIZE - 1 - x, MAP_SIZE - 1 - y])
-  const mirroredTop = shortestRouteAssignment(starts, mirroredPoints)
-  const mirroredBottom = shortestRouteAssignment([[9, MAP_SIZE - 1], [6, MAP_SIZE - 1], [3, MAP_SIZE - 1]], mirroredPoints)
-  const rotate = ([x, y]) => `${MAP_SIZE - 1 - x},${MAP_SIZE - 1 - y}`
-  const obstacleSet = new Set(OBSTACLES.map(rotate))
-  const coverSet = new Set(COVER.map(rotate))
-  const symmetric = (cells) => cells.every(([x, y]) => new Set(cells.map(([cx, cy]) => `${cx},${cy}`)).has(rotate([x, y])))
-  console.log('КАРТА: 12×12; случайно меняются стартовая сторона, инициатива и ориентация целей.')
-  console.log(`Препятствия 180° симметричны: ${symmetric(OBSTACLES) ? 'да' : 'нет'}; укрытия: ${symmetric(COVER) ? 'да' : 'нет'}; цели меняются на зеркальные между матчами.`)
-  console.log(`Прямое расположение: верх/низ ${top.bestTotal}/${bottom.bestTotal} шагов; зеркальное: ${mirroredTop.bestTotal}/${mirroredBottom.bestTotal}; средний путь каждой стороны: ${((top.bestTotal + bottom.bestTotal + mirroredTop.bestTotal + mirroredBottom.bestTotal) / 4).toFixed(1)}.`)
+  const bottomStarts = [[9, MAP_SIZE - 1], [6, MAP_SIZE - 1], [3, MAP_SIZE - 1]]
+  const rotateKey = ([x, y]) => `${MAP_SIZE - 1 - x},${MAP_SIZE - 1 - y}`
+  const symmetric = (cells) => { const keys = new Set(cells.map(([x, y]) => `${x},${y}`)); return cells.every((cell) => keys.has(rotateKey(cell))) }
+  console.log('КАРТЫ: проверены назначенные маршруты от обоих краёв поля и зеркальная расстановка точек.')
+  for (const map of MAPS) {
+    const points = map.controlPoints
+    const top = shortestRouteAssignment(starts, points, map.obstacles)
+    const bottom = shortestRouteAssignment(bottomStarts, points, map.obstacles)
+    const mirrored = points.map(([x, y]) => [MAP_SIZE - 1 - x, MAP_SIZE - 1 - y])
+    const mirroredTop = shortestRouteAssignment(starts, mirrored, map.obstacles)
+    const mirroredBottom = shortestRouteAssignment(bottomStarts, mirrored, map.obstacles)
+    console.log(`${map.name}: верх/низ ${top.bestTotal}/${bottom.bestTotal}; зеркально ${mirroredTop.bestTotal}/${mirroredBottom.bestTotal}; препятствия симметричны ${symmetric(map.obstacles)}; укрытия симметричны ${symmetric(map.cover)}.`)
+  }
 }
 
 printMapAnalysis()
 const factionStats = Object.fromEntries(FACTIONS.map((faction) => [faction, { wins: 0, matches: 0 }]))
 const matchupStats = new Map(matchups.map(([first, second]) => [`${first}:${second}`, { first, second, firstWins: 0, secondWins: 0, draws: 0, matches: 0, attacks: 0, damage: 0, destroyedUnits: 0 }]))
+const mapStats = new Map(MAPS.map((map) => [map.id, { name: map.name, matches: 0, wins: Object.fromEntries(FACTIONS.map((faction) => [faction, 0])), draws: 0, abilityUses: 0 }]))
 const totals = { draw: 0, turns: 0, attacks: 0, damage: 0, destroyedUnits: 0, completed: 0, controlWins: 0, eliminationWins: 0, timeout: 0 }
 const sideResults = { top: { wins: 0, losses: 0, draws: 0 }, bottom: { wins: 0, losses: 0, draws: 0 }, first: 0, second: 0 }
 for (let index = 0; index < matchCount; index += 1) {
   const result = simulate(index)
   const [firstFaction, secondFaction] = result.matchup
   const pairing = matchupStats.get(`${firstFaction}:${secondFaction}`)
+  const mapResult = mapStats.get(result.mapId)
+  mapResult.matches += 1
+  mapResult.abilityUses += result.abilityUses
+  if (result.winnerFaction === 'draw') mapResult.draws += 1
+  else mapResult.wins[result.winnerFaction] += 1
   pairing.matches += 1
   pairing.attacks += result.attackCount
   pairing.damage += result.damageDealt
@@ -249,6 +273,7 @@ const winRate = (faction) => `${(factionStats[faction].wins / factionStats[facti
 console.log(`\nРЕЗУЛЬТАТ: ${matchCount} матчей, предел ${maxTurns} раундов${allFactionMode ? ', все парные сочетания фракций' : ', Империум против Орков'}.`)
 for (const faction of FACTIONS.filter((item) => factionStats[item].matches)) console.log(`${factionNames[faction]}: ${factionStats[faction].wins}/${factionStats[faction].matches} побед (${winRate(faction)}).`)
 for (const result of matchupStats.values()) console.log(`Пара ${factionNames[result.first]} — ${factionNames[result.second]}: ${result.firstWins} / ${result.secondWins} побед, ${result.draws} ничьих (${result.matches} матчей); атак ${result.attacks}, урона ${result.damage}, уничтожено отрядов ${result.destroyedUnits}.`)
+for (const result of mapStats.values()) console.log(`Карта ${result.name}: ${result.matches} матчей, ${result.draws} ничьих, использований способностей ${result.abilityUses}; победы: ${FACTIONS.map((faction) => `${factionNames[faction]} ${result.wins[faction]}`).filter((entry) => !entry.endsWith(' 0')).join(', ') || 'нет'}.`)
 console.log(`Ничьи: ${totals.draw} (${(totals.draw / matchCount * 100).toFixed(1)}%).`)
 console.log(`Завершено: ${totals.completed}; захват точек: ${totals.controlWins}; уничтожение армии: ${totals.eliminationWins}; тайм-аут/ничья: ${totals.timeout}.`)
 console.log(`Средняя длительность: ${(totals.turns / matchCount).toFixed(1)} раунда.`)

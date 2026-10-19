@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { applyBattleAction, availableMoves, calculateWoundTarget, createBattle, FACTIONS, rollD6 } from '../game/battleEngine.js'
+import { applyBattleAction, availableAttacks, availableMoves, calculateWoundTarget, createBattle, FACTIONS, MAPS, rollD6 } from '../game/battleEngine.js'
 
 const players = [
   { userId: 'imperium', username: 'Imperium', faction: 'imperium' },
@@ -149,5 +149,80 @@ for (const faction of FACTIONS) {
   assert.equal(mixedBattle.units.filter((unit) => unit.playerIndex === 1).length, 3)
   assert(mixedBattle.units.every((unit) => unit.weapons.ranged && unit.weapons.melee))
 }
+
+for (const map of MAPS) {
+  const mapped = createBattle({ id: `map-${map.id}`, players, mapId: map.id, now: 1 })
+  assert.equal(mapped.mapId, map.id)
+  assert.deepEqual(mapped.obstacles.map(({ x, y }) => [x, y]), map.obstacles)
+  assert.equal(mapped.controlPoints.length, 3)
+  assert(mapped.controlPoints.every((point) => !mapped.obstacles.some((obstacle) => obstacle.x === point.x && obstacle.y === point.y)))
+  const obstacles = new Set(map.obstacles.map(([x, y]) => `${x},${y}`))
+  const routeExists = (from, targets) => {
+    const queue = [from], visited = new Set([`${from.x},${from.y}`])
+    for (let index = 0; index < queue.length; index += 1) {
+      const cell = queue[index]
+      if (targets.some((target) => target.x === cell.x && target.y === cell.y)) return true
+      for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
+        if (!dx && !dy) continue
+        const x = cell.x + dx, y = cell.y + dy, key = `${x},${y}`
+        if (x < 0 || y < 0 || x >= 12 || y >= 12 || obstacles.has(key) || visited.has(key)) continue
+        if (dx && dy && obstacles.has(`${cell.x},${y}`) && obstacles.has(`${x},${cell.y}`)) continue
+        visited.add(key); queue.push({ x, y })
+      }
+    }
+    return false
+  }
+  for (const start of [{ x: 2, y: 0 }, { x: 5, y: 0 }, { x: 8, y: 0 }, { x: 9, y: 11 }, { x: 6, y: 11 }, { x: 3, y: 11 }]) {
+    assert(routeExists(start, mapped.controlPoints), `${map.id}: every deployment cell must have a route to a control point`)
+  }
+}
+
+state = battle('imperium-ability')
+const imperialTarget = state.units.find((unit) => unit.id === '1-boy')
+imperialTarget.x = 2; imperialTarget.y = 3
+const discipline = run(state, 'imperium', 'attack', { unitId: '0-tactical', targetUnitId: imperialTarget.id, weaponType: 'ranged', useAbility: true }, [0, 5 / 6, 5 / 6, 0])
+assert.equal(discipline.attack.attacks[0].originalHit, 1)
+assert.equal(discipline.attack.attacks[0].hitReroll, 6)
+assert.equal(discipline.state.players[0].factionAbilityUsed, true)
+
+const chaosPlayers = [players[0], { userId: 'chaos-player', username: 'Chaos', faction: 'chaos' }]
+state = createBattle({ id: 'chaos-ability', players: chaosPlayers, firstPlayerIndex: 1, now: 1 })
+const chaosAttacker = state.units.find((unit) => unit.id === '1-legionary')
+const chaosVictim = state.units.find((unit) => unit.id === '0-tactical')
+chaosAttacker.x = 2; chaosAttacker.y = 0; chaosVictim.x = 2; chaosVictim.y = 3
+const blessed = run(state, 'chaos-player', 'attack', { unitId: chaosAttacker.id, targetUnitId: chaosVictim.id, weaponType: 'ranged', useAbility: true }, [0.5, 2 / 6, 0])
+assert.equal(blessed.attack.ability, 'Благословение варпа')
+assert.equal(blessed.state.players[1].factionAbilityUsed, true)
+assert.equal(blessed.attack.attacks[0].wound, 3, 'Chaos power improves strength for the attack')
+
+state = createBattle({ id: 'orks-ability', players, firstPlayerIndex: 1, now: 1 })
+const orkBoy = state.units.find((unit) => unit.id === '1-boy')
+const orkAlly = state.units.find((unit) => unit.id === '1-nob')
+const orkTarget = state.units.find((unit) => unit.id === '0-tactical')
+orkBoy.x = 3; orkBoy.y = 3; orkAlly.x = 3; orkAlly.y = 4; orkTarget.x = 4; orkTarget.y = 3
+const waagh = run(state, 'orks', 'attack', { unitId: orkBoy.id, targetUnitId: orkTarget.id, weaponType: 'melee', useAbility: true }, [])
+assert.equal(waagh.attack.attacks.length, 7, 'Ork mob passive and Waaagh ability add three melee attacks')
+assert.equal(waagh.state.players[1].factionAbilityUsed, true)
+assert.match(run(waagh.state, 'orks', 'attack', { unitId: '1-nob', targetUnitId: orkTarget.id, weaponType: 'ranged', useAbility: true }).error, /уже использована/)
+
+const tauPlayers = [players[0], { userId: 'tau-player', username: 'Tau', faction: 'tau' }]
+state = createBattle({ id: 'tau-ability', players: tauPlayers, firstPlayerIndex: 1, now: 1 })
+const tauShooter = state.units.find((unit) => unit.id === '1-fire-warrior')
+const tauTarget = state.units.find((unit) => unit.id === '0-tactical')
+tauShooter.x = 2; tauShooter.y = 0; tauTarget.x = 2; tauTarget.y = 4
+tauTarget.save = 3
+const marker = run(state, 'tau-player', 'attack', { unitId: tauShooter.id, targetUnitId: tauTarget.id, weaponType: 'ranged', useAbility: true }, [1 / 6, 3 / 6, 1 / 6])
+assert.equal(marker.attack.attacks[0].hit, 2, 'the T’au ability improves the hit target by one')
+assert.equal(marker.attack.attacks[0].save, 2)
+assert.equal(marker.attack.attacks[0].damage, 1, 'the T’au marker ignores target cover')
+assert.equal(marker.state.players[1].factionAbilityUsed, true)
+
+state = createBattle({ id: 'tau-passive', players: tauPlayers, firstPlayerIndex: 1, now: 1 })
+const pathfinder = state.units.find((unit) => unit.id === '1-pathfinder')
+const farTarget = state.units.find((unit) => unit.id === '0-tactical')
+pathfinder.x = 1; pathfinder.y = 1; farTarget.x = 8; farTarget.y = 1
+state.units.find((unit) => unit.id === '0-terminator').x = 0; state.units.find((unit) => unit.id === '0-terminator').y = 6
+state.units.find((unit) => unit.id === '0-scout').x = 11; state.units.find((unit) => unit.id === '0-scout').y = 6
+assert(availableAttacks(state, 'tau-player', pathfinder.id).some((entry) => entry.targetUnitId === farTarget.id), 'stationary T’au receive one extra tile of range')
 
 console.log('Боевой движок: проверены четыре фракции, смешанные составы и правила хода, атаки, захвата и сдачи.')

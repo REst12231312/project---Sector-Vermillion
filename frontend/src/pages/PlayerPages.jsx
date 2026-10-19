@@ -1,7 +1,60 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { getProgress, getFactionRank, IMPERIUM_RANKS, CHAOS_RANKS, ORKS_RANKS, TAU_RANKS, FACTION_DETAILS } from '../utils/gameProgress'
-import { getCurrentUser } from '../utils/api'
+import { apiRequest, getCurrentUser, updateCurrentUser } from '../utils/api'
+import './PlayerPages.css'
+
+const FACTION_NAMES = { imperium: 'Империум', chaos: 'Хаос', orks: 'Орки', tau: 'Империя Тау' }
+const AVATARS = [['default', 'Позывной', '◈'], ['imperium', 'Империум', 'I'], ['chaos', 'Хаос', '⛧'], ['orks', 'Орки', 'W'], ['tau', 'Тау', 'T'], ['skull', 'Череп', '☠'], ['eagle', 'Орёл', '✦'], ['star', 'Звезда', '✧']]
+const WIN_METHODS = { annihilation: 'уничтожение отрядов', objectives: 'контроль точек', surrender: 'сдача', disconnect: 'потеря связи', battle: 'бой' }
+
+function AccountSettings({ user, onUser }) {
+  const [username, setUsername] = React.useState(user?.username || '')
+  const [avatarId, setAvatarId] = React.useState(user?.avatarId || 'default')
+  const [favoriteFaction, setFavoriteFaction] = React.useState(user?.favoriteFaction || user?.faction || 'imperium')
+  const [currentPassword, setCurrentPassword] = React.useState('')
+  const [newPassword, setNewPassword] = React.useState('')
+  const [notice, setNotice] = React.useState('')
+  const [error, setError] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  React.useEffect(() => {
+    setUsername(user?.username || '')
+    setAvatarId(user?.avatarId || 'default')
+    setFavoriteFaction(user?.favoriteFaction || user?.faction || 'imperium')
+  }, [user])
+
+  async function saveProfile(event) {
+    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try {
+      const result = await apiRequest('/auth/profile', { method: 'PUT', body: JSON.stringify({ username, avatarId, favoriteFaction }) })
+      const updated = updateCurrentUser(result.user); onUser(updated); setNotice('Профиль сохранён.')
+    } catch (requestError) { setError(requestError.message) }
+    finally { setBusy(false) }
+  }
+
+  async function savePassword(event) {
+    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try {
+      const result = await apiRequest('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) })
+      const updated = updateCurrentUser(result.user); onUser(updated); setCurrentPassword(''); setNewPassword(''); setNotice('Пароль изменён.')
+    } catch (requestError) { setError(requestError.message) }
+    finally { setBusy(false) }
+  }
+
+  return <section className="account-settings">
+    <div className="section-heading"><div><p className="eyebrow">АККАУНТ · НАСТРОЙКИ</p><h2>Личные данные</h2></div></div>
+    <form className="account-settings-form" onSubmit={saveProfile}>
+      <label>ПОЗЫВНОЙ<input value={username} onChange={(event) => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" required /></label>
+      <label>ЛЮБИМАЯ ФРАКЦИЯ<select value={favoriteFaction} onChange={(event) => setFavoriteFaction(event.target.value)}>{Object.entries(FACTION_NAMES).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
+      <fieldset className="account-avatar-picker"><legend>ЗНАК ПРОФИЛЯ</legend>{AVATARS.map(([id, name, icon]) => <label className={avatarId === id ? 'is-selected' : ''} key={id} title={name}><input type="radio" name="avatarId" value={id} checked={avatarId === id} onChange={() => setAvatarId(id)} /><span>{icon}</span><small>{name}</small></label>)}</fieldset>
+      <button className="button button-primary" type="submit" disabled={busy}>{busy ? 'СОХРАНЯЮ…' : 'Сохранить профиль'}</button>
+    </form>
+    <form className="account-password-form" onSubmit={savePassword}>
+      <h3>Сменить пароль</h3><label>ТЕКУЩИЙ ПАРОЛЬ<input type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label><label>НОВЫЙ ПАРОЛЬ<input type="password" autoComplete="new-password" minLength={8} maxLength={72} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label><button className="button button-outline" type="submit" disabled={busy}>{busy ? 'СОХРАНЯЮ…' : 'Изменить пароль'}</button>
+    </form>
+    {error && <p className="online-error" role="alert">{error}</p>}{notice && <p className="online-notice" role="status">{notice}</p>}
+  </section>
+}
 
 const campaignAwards = [
   { id: 'campaign-imperium-origin', icon: 'I', name: 'Объединитель Терры', description: 'Заверши первую операцию кампании.' },
@@ -90,7 +143,10 @@ function AchievementGroup({ title, mark, awards, progress }) {
 
 export default function PlayerPages() {
   const [progress, setProgress] = React.useState(getProgress)
-  const user = getCurrentUser()
+  const [user, setUser] = React.useState(getCurrentUser)
+  const [battleStats, setBattleStats] = React.useState({ wins: 0, losses: 0, matches: 0, winRate: 0, favoriteFaction: null })
+  const [matchHistory, setMatchHistory] = React.useState([])
+  const [historyBusy, setHistoryBusy] = React.useState(true)
   const factionId = FACTION_DETAILS[user?.faction] ? user.faction : 'imperium'
   const faction = FACTION_DETAILS[factionId]
   const levelIds = faction.levelIds
@@ -102,6 +158,20 @@ export default function PlayerPages() {
     window.addEventListener('sv-progress-updated', updateProgress)
     return () => window.removeEventListener('sv-progress-updated', updateProgress)
   }, [])
+  React.useEffect(() => {
+    const updateUser = (event) => setUser(event.detail || getCurrentUser())
+    window.addEventListener('sv-user-updated', updateUser)
+    return () => window.removeEventListener('sv-user-updated', updateUser)
+  }, [])
+  React.useEffect(() => {
+    let cancelled = false
+    Promise.all([apiRequest('/auth/profile'), apiRequest('/auth/matches?limit=50')]).then(([profile, history]) => {
+      if (cancelled) return
+      const updated = updateCurrentUser(profile.user)
+      setUser(updated); setBattleStats(profile.stats); setMatchHistory(history.matches)
+    }).catch(() => {}).finally(() => { if (!cancelled) setHistoryBusy(false) })
+    return () => { cancelled = true }
+  }, [])
 
   const ranks = factionId === 'chaos' ? CHAOS_RANKS : factionId === 'orks' ? ORKS_RANKS : factionId === 'tau' ? TAU_RANKS : IMPERIUM_RANKS
   const rank = getFactionRank(progress.xp, factionId)
@@ -112,7 +182,11 @@ export default function PlayerPages() {
 
   return <main className="content-page profile-page">
     <p className="eyebrow">ЛИЧНЫЙ АРХИВ · {factionId === 'imperium' ? 'ВОИНСКОЕ ЗВАНИЕ' : 'РАНГ'}</p>
-    <section className={`profile-card ${factionId === 'chaos' ? 'chaos-theme' : factionId === 'orks' ? 'orks-theme' : factionId === 'tau' ? 'tau-theme' : ''}`}><div className="profile-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</div><div><span className="eyebrow">{user?.username || 'КОМАНДИР'} · {faction.name.toUpperCase()}</span><h1>{rank.name}</h1><p>{factionId === 'imperium' ? 'Твоё звание растёт вместе с опытом, полученным в операциях.' : 'Твой ранг растёт вместе с опытом, полученным в операциях.'}</p></div><div className="profile-xp"><b>{progress.xp}</b><span>ОПЫТ</span></div></section>
+    <section className={`profile-card ${factionId === 'chaos' ? 'chaos-theme' : factionId === 'orks' ? 'orks-theme' : factionId === 'tau' ? 'tau-theme' : ''}`}><div className={`profile-avatar avatar-${user?.avatarId || 'default'}`}>{AVATARS.find(([id]) => id === user?.avatarId)?.[2] || user?.username?.[0]?.toUpperCase() || 'A'}</div><div><span className="eyebrow">{user?.username || 'КОМАНДИР'} · {faction.name.toUpperCase()}</span><h1>{rank.name}</h1><p>{factionId === 'imperium' ? 'Твоё звание растёт вместе с опытом, полученным в операциях.' : 'Твой ранг растёт вместе с опытом, полученным в операциях.'}</p></div><div className="profile-xp"><b>{progress.xp}</b><span>ОПЫТ</span></div></section>
+    <AccountSettings user={user} onUser={setUser} />
+    <section className="online-battle-record"><div className="section-heading"><div><p className="eyebrow">СЕТЕВЫЕ ОПЕРАЦИИ</p><h2>Боевой послужной список</h2></div></div><div className="profile-stats battle-record-stats"><article><span>МАТЧИ</span><b>{battleStats.matches}</b></article><article><span>ПОБЕДЫ</span><b>{battleStats.wins}</b></article><article><span>ПОРАЖЕНИЯ</span><b>{battleStats.losses}</b></article><article><span>ПОБЕДНОСТЬ</span><b>{battleStats.winRate}%</b></article><article><span>ЧАСТАЯ ФРАКЦИЯ</span><b className="stat-rank">{FACTION_NAMES[battleStats.favoriteFaction] || '—'}</b></article></div>
+      <div className="match-history-list">{historyBusy ? <p>Загружаю историю матчей…</p> : matchHistory.length ? matchHistory.map((match) => { const won = match.winnerUserId === user?.id; const opponent = match.participants.find((participant) => participant.userId !== user?.id); return <article className={`match-history-item ${won ? 'is-victory' : 'is-defeat'}`} key={match.matchId}><span className="match-history-result">{won ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ'}</span><div><b>{opponent?.username || 'Соперник'} · {FACTION_NAMES[opponent?.faction] || 'фракция неизвестна'}</b><small>{match.mapName || match.mapId} · Ход {match.turns} · {Math.floor(match.durationSeconds / 60)} мин. · {new Date(match.playedAt).toLocaleDateString('ru-RU')}</small></div><span>{WIN_METHODS[match.winMethod] || 'бой завершён'}</span></article> }) : <p className="match-history-empty">Сетевых матчей пока нет. Первый результат появится здесь после завершения боя.</p>}</div>
+    </section>
     <div className="profile-stats"><article><span>{factionId === 'imperium' ? 'ТЕКУЩЕЕ ЗВАНИЕ' : 'ТЕКУЩИЙ РАНГ'}</span><b className="stat-rank">{rank.name}</b><small>{rank.next ? `До ${factionId === 'imperium' ? 'звания' : 'ранга'} «${rank.next.name}»: ${rank.next.minXP - progress.xp} XP` : factionId === 'imperium' ? 'Высшее звание получено' : 'Высший ранг получен'}</small></article><article><span>ОПЕРАЦИИ</span><b>{factionCompleted.length}/{levelIds.length}</b><small>Пройдено в кампании {faction.shortName}</small></article><article><span>ДОСЬЕ</span><b>{factionCompleted.length}</b><small>Главы открыты в архиве</small></article><article><span>ФРАКЦИЯ</span><b>{faction.mark}</b><small>{faction.name}</small></article></div>
     <section className="rank-section"><div className="section-heading"><div><p className="eyebrow">ПОВЫШЕНИЕ · {progress.xp} XP</p><h2>{factionId === 'imperium' ? 'Лестница званий' : 'Лестница рангов'}</h2></div></div><div className="rank-progress-track"><span style={{ width: `${rankProgress}%` }} /></div><div className="rank-ladder">{ranks.map((item) => { const achieved = progress.xp >= item.minXP; const current = item.id === rank.id; return <article className={`rank-step ${achieved ? 'rank-achieved' : ''} ${current ? 'rank-current' : ''}`} key={item.id}><span>{achieved ? '✓' : item.minXP}</span><b>{item.name}</b><small>{item.minXP} XP</small></article> })}</div></section>
     <section className="achievement-section"><div className="section-heading"><div><p className="eyebrow">НАГРАДЫ · {earnedAwardsCount}/{allAwardsCount}</p><h2>Боевые отличия</h2></div></div><div className="achievement-groups">

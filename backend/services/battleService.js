@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { applyBattleAction, battleSnapshot, createBattle, FACTIONS } from '../game/battleEngine.js'
+import { applyBattleAction, battleSnapshot, createBattle, FACTIONS, MAPS } from '../game/battleEngine.js'
 import { readOnlineState, saveOnlineState } from '../storage.js'
 
 export const TURN_TIME_LIMIT_MS = 60_000
@@ -51,7 +51,8 @@ function createMatch(first, second, roomCode = null, at = Date.now()) {
     id: randomBytes(9).toString('base64url'), players: [first, second],
     firstPlayerIndex: Math.random() < 0.5 ? 0 : 1,
     topPlayerIndex: Math.random() < 0.5 ? 0 : 1,
-    reverseObjectives: Math.random() < 0.5, now: at,
+    reverseObjectives: Math.random() < 0.5,
+    mapId: MAPS[Math.floor(Math.random() * MAPS.length)].id, now: at,
   })
   match.roomCode = roomCode
   match.turnDeadlineAt = at + TURN_TIME_LIMIT_MS
@@ -100,6 +101,8 @@ function finishDisconnectedPlayer(match, userId, at) {
   match.status = 'finished'
   match.winnerIndex = winner.index
   match.winReason = `${player.username} не восстановил связь за 90 секунд.`
+  match.winMethod = 'disconnect'
+  match.finishedAt = at
   match.turnDeadlineAt = null
   appendLog(match, `${winner.username} одержал победу. ${match.winReason}`, at)
 }

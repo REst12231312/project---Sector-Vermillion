@@ -1,6 +1,14 @@
-import { CONTROL_POINT_CELLS, MAP_SIZE, OBSTACLES } from '../game/battleEngine.js'
+import { MAP_SIZE, MAPS } from '../game/battleEngine.js'
 
-function distance(from, to, occupied = new Set()) {
+const starts = [
+  [{ x: 2, y: 0 }, { x: 5, y: 0 }, { x: 8, y: 0 }],
+  [{ x: 9, y: MAP_SIZE - 1 }, { x: 6, y: MAP_SIZE - 1 }, { x: 3, y: MAP_SIZE - 1 }],
+]
+const asSet = (cells) => new Set(cells.map(([x, y]) => `${x},${y}`))
+const rotateKey = ([x, y]) => `${MAP_SIZE - 1 - x},${MAP_SIZE - 1 - y}`
+
+function distance(from, to, obstacles) {
+  const blocked = asSet(obstacles)
   const queue = [{ ...from, steps: 0 }]
   const visited = new Set([`${from.x},${from.y}`])
   for (let head = 0; head < queue.length; head += 1) {
@@ -9,44 +17,45 @@ function distance(from, to, occupied = new Set()) {
     for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
       if (!dx && !dy) continue
       const x = current.x + dx, y = current.y + dy, key = `${x},${y}`
-      if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE || visited.has(key) || occupied.has(key) || OBSTACLES.some(([ox, oy]) => ox === x && oy === y)) continue
-      if (dx && dy && OBSTACLES.some(([ox, oy]) => ox === current.x && oy === y) && OBSTACLES.some(([ox, oy]) => ox === x && oy === current.y)) continue
+      if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE || visited.has(key) || blocked.has(key)) continue
+      if (dx && dy && blocked.has(`${current.x},${y}`) && blocked.has(`${x},${current.y}`)) continue
       visited.add(key); queue.push({ x, y, steps: current.steps + 1 })
     }
   }
   return Infinity
 }
 
-function bestAssignment(starts, points) {
+function assignmentCost(sideStarts, points, obstacles) {
   let best = Infinity
-  const visit = (index, used, total) => {
-    if (index === starts.length) { best = Math.min(best, total); return }
-    for (let point = 0; point < points.length; point += 1) if (!used.has(point)) {
-      used.add(point); visit(index + 1, used, total + distance(starts[index], points[point])); used.delete(point)
+  const visit = (index, used, sum) => {
+    if (index === sideStarts.length) { best = Math.min(best, sum); return }
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) if (!used.has(pointIndex)) {
+      used.add(pointIndex)
+      visit(index + 1, used, sum + distance(sideStarts[index], { x: points[pointIndex][0], y: points[pointIndex][1] }, obstacles))
+      used.delete(pointIndex)
     }
   }
   visit(0, new Set(), 0)
   return best
 }
 
-const topStarts = [{ x: 2, y: 0 }, { x: 5, y: 0 }, { x: 8, y: 0 }]
-const bottomStarts = [{ x: 9, y: 11 }, { x: 6, y: 11 }, { x: 3, y: 11 }]
-const currentPoints = CONTROL_POINT_CELLS.map(([x, y]) => ({ x, y }))
-const candidates = []
-for (let y = 3; y <= 8; y += 1) for (let x = 1; x <= 10; x += 1) {
-  if (OBSTACLES.some(([ox, oy]) => ox === x && oy === y)) continue
-  candidates.push({ x, y })
+let failed = false
+console.log('АУДИТ МАРШРУТОВ К КОНТРОЛЬНЫМ ТОЧКАМ · 12×12')
+for (const map of MAPS) {
+  const pointKeys = asSet(map.controlPoints)
+  const obstacleKeys = asSet(map.obstacles)
+  const collision = [...pointKeys].some((key) => obstacleKeys.has(key))
+  const obstaclesSymmetric = map.obstacles.every((cell) => obstacleKeys.has(rotateKey(cell)))
+  const coverKeys = asSet(map.cover)
+  const coverSymmetric = map.cover.every((cell) => coverKeys.has(rotateKey(cell)))
+  const top = assignmentCost(starts[0], map.controlPoints, map.obstacles)
+  const bottom = assignmentCost(starts[1], map.controlPoints, map.obstacles)
+  const rotated = map.controlPoints.map(([x, y]) => [MAP_SIZE - 1 - x, MAP_SIZE - 1 - y])
+  const rotatedTop = assignmentCost(starts[0], rotated, map.obstacles)
+  const rotatedBottom = assignmentCost(starts[1], rotated, map.obstacles)
+  const routeBalanced = Math.abs(top - bottom) <= 1 && Math.abs(rotatedTop - rotatedBottom) <= 1
+  const valid = !collision && obstaclesSymmetric && coverSymmetric && [top, bottom, rotatedTop, rotatedBottom].every(Number.isFinite) && routeBalanced
+  if (!valid) failed = true
+  console.log(`${valid ? 'OK' : 'ПРОВЕРИТЬ'} · ${map.name} · маршрут назначенных отрядов: ${top}/${bottom} ходов, зеркально ${rotatedTop}/${rotatedBottom}; препятствия симметричны: ${obstaclesSymmetric}; укрытия симметричны: ${coverSymmetric}; точка на препятствии: ${collision}`)
 }
-const layouts = []
-for (let a = 0; a < candidates.length; a += 1) for (let b = a + 1; b < candidates.length; b += 1) for (let c = b + 1; c < candidates.length; c += 1) {
-  const points = [candidates[a], candidates[b], candidates[c]]
-  if (points.some((point, index) => points.slice(index + 1).some((other) => Math.max(Math.abs(point.x - other.x), Math.abs(point.y - other.y)) < 3))) continue
-  const top = bestAssignment(topStarts, points), bottom = bestAssignment(bottomStarts, points)
-  const centerDrift = Math.abs(points.reduce((total, point) => total + point.x, 0) / 3 - 5.5) + Math.abs(points.reduce((total, point) => total + point.y, 0) / 3 - 5.5)
-  const widthSpread = Math.max(...points.map((point) => point.x)) - Math.min(...points.map((point) => point.x))
-  layouts.push({ points, top, bottom, difference: Math.abs(top - bottom), sum: top + bottom, centerDrift, widthSpread })
-}
-layouts.sort((a, b) => a.difference - b.difference || a.sum - b.sum || b.widthSpread - a.widthSpread || a.centerDrift - b.centerDrift)
-console.log(`Текущий вариант: ${JSON.stringify(CONTROL_POINT_CELLS)}; кратчайшие маршруты ${bestAssignment(topStarts, currentPoints)} / ${bestAssignment(bottomStarts, currentPoints)}.`)
-console.log('Варианты с равным маршрутом обеих сторон:')
-for (const layout of layouts.filter(({ difference }) => difference === 0).slice(0, 10)) console.log(`${JSON.stringify(layout.points)} → ${layout.top}/${layout.bottom} ходов`)
+if (failed) process.exitCode = 1
