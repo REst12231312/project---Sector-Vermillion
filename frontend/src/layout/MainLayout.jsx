@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { applyServerProgress } from '../utils/gameProgress'
 import { apiRequest, clearAuth, getCurrentUser, isAuthenticated } from '../utils/api'
 import { FACTION_DETAILS } from '../utils/gameProgress'
@@ -7,9 +7,12 @@ import SignalIntercept from './SignalIntercept'
 
 export default function MainLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = getCurrentUser()
   const faction = FACTION_DETAILS[user?.faction] || FACTION_DETAILS.imperium
   const authenticated = isAuthenticated()
+  const routeParts = location.pathname.split('/').filter(Boolean)
+  const studyingLore = routeParts[0] === 'archive' && routeParts.length === 3
   const [ready, setReady] = React.useState(!authenticated)
   const [xp, setXp] = React.useState(() => Number(localStorage.getItem('sv-xp') || 0))
   React.useEffect(() => {
@@ -31,6 +34,6 @@ export default function MainLayout() {
       <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={() => { clearAuth(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
     </header>
     <Outlet />
-    <SignalIntercept />
+    {studyingLore && <SignalIntercept />}
   </div>
 }

@@ -5,14 +5,49 @@ import { FACTION_DETAILS } from '../utils/gameProgress'
 import { apiRequest, getCurrentUser, updateCurrentUser } from '../utils/api'
 import './OnlinePage.css'
 
+const MATCH_KEY = 'sv-online-match'
+const ONLINE_FACTIONS = ['imperium', 'chaos', 'orks', 'tau']
+const FACTION_NAMES = { imperium: 'Империум', chaos: 'Хаос', orks: 'Орки', tau: 'Тау' }
+const factionMark = { imperium: 'I', chaos: '⛧', orks: 'W', tau: 'T' }
+const cellLabel = (x, y) => `${String.fromCharCode(65 + x)}${12 - y}`
+function hasClearShot(from, to, obstacles) {
+  let x = from.x, y = from.y
+  const dx = Math.abs(to.x - x), dy = Math.abs(to.y - y)
+  const sx = x < to.x ? 1 : -1, sy = y < to.y ? 1 : -1
+  let error = dx - dy
+  while (x !== to.x || y !== to.y) {
+    const twiceError = 2 * error
+    if (twiceError > -dy) { error -= dy; x += sx }
+    if (twiceError < dx) { error += dx; y += sy }
+    if (x !== to.x || y !== to.y) for (const cell of obstacles) if (cell.x === x && cell.y === y) return false
+  }
+  return true
+}
+
 export default function OnlinePage() {
   const user = getCurrentUser()
-  const factionId = FACTION_DETAILS[user?.faction] ? user.faction : 'imperium'
-  const faction = FACTION_DETAILS[factionId]
-  const identity = ONLINE_IDENTITY_CHOICES[factionId]
+  const profileFaction = FACTION_DETAILS[user?.faction] ? user.faction : 'imperium'
+  const faction = FACTION_DETAILS[profileFaction]
+  const identity = ONLINE_IDENTITY_CHOICES[profileFaction]
   const [identityChoice, setIdentityChoice] = React.useState(identity ? user?.[identity.field] || '' : '')
   const [identityBusy, setIdentityBusy] = React.useState(false)
   const [identityMessage, setIdentityMessage] = React.useState('')
+  const [factionChoice, setFactionChoice] = React.useState(ONLINE_FACTIONS.includes(user?.faction) ? user.faction : 'imperium')
+  const [queueing, setQueueing] = React.useState(false)
+  const [lobbyNotice, setLobbyNotice] = React.useState('')
+  const [matchId, setMatchId] = React.useState(() => localStorage.getItem(MATCH_KEY) || '')
+  const [match, setMatch] = React.useState(null)
+  const [matchError, setMatchError] = React.useState('')
+  const [selectedId, setSelectedId] = React.useState('')
+  const [actionMode, setActionMode] = React.useState('move')
+  const [weaponType, setWeaponType] = React.useState('ranged')
+  const [busy, setBusy] = React.useState(false)
+  const [toast, setToast] = React.useState('')
+  const [lastAttack, setLastAttack] = React.useState(null)
+  const [confirmSurrender, setConfirmSurrender] = React.useState(false)
+  const isMyTurn = match?.status === 'active' && match.activePlayer === match.viewerIndex
+  const didWin = match?.status === 'finished' && match.winnerIndex === match.viewerIndex
+  const selectedUnit = match?.units.find((unit) => unit.id === selectedId) || null
   const savedChoice = identity ? user?.[identity.field] || '' : ''
 
   async function saveIdentity() {
@@ -25,22 +60,173 @@ export default function OnlinePage() {
       setIdentityMessage('Выбор сохранён.')
     } catch (error) {
       setIdentityMessage(error.message || 'Не удалось сохранить выбор.')
-    } finally {
-      setIdentityBusy(false)
-    }
+    } finally { setIdentityBusy(false) }
   }
 
-  return <main className={`content-page online-page ${factionId === 'chaos' ? 'chaos-theme' : factionId === 'orks' ? 'orks-theme' : factionId === 'tau' ? 'tau-theme' : ''}`}>
-    <Link className="back-link" to="/campaign">← Карта кампании</Link>
-    <p className="eyebrow">СЕТЕВОЙ РЕЖИМ · ПОДГОТОВКА СОЕДИНЕНИЯ</p>
-    <h1>Sector: Vermillion</h1>
-    <section className="online-connection" aria-label="Статус онлайн-режима">
-      <div className="online-connection-heading"><div><p className="eyebrow">УЗЕЛ СВЯЗИ · VER-IX</p><h2>Соединение не установлено</h2></div><span className="online-connection-state"><i />ОФЛАЙН</span></div>
-      <p>Когда сетевой модуль будет подключён, этот раздел станет точкой входа в совместные операции.</p>
-      <div className="online-connection-grid"><div><span>ПОЗЫВНОЙ</span><b>{user?.username || 'НЕИЗВЕСТЕН'}</b></div><div><span>ФРАКЦИЯ</span><b>{faction.name}</b></div><div>{identity ? <><span>{identity.label}</span><span className="online-select-wrap"><select id="online-subfaction" aria-label={identity.label} value={identityChoice} onChange={(event) => { setIdentityChoice(event.target.value); setIdentityMessage('') }}><option value="">Не выбран</option>{identity.options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></span></> : <><span>ЗВАНИЕ</span><b>ПРОФИЛЬ ФРАКЦИИ</b></>}</div></div>
-      <div className="online-connection-actions"><Link className="text-link" to="/profile">Профиль игрока <span>→</span></Link>{identity && <div className="online-identity-save"><button className="button button-outline" type="button" onClick={saveIdentity} disabled={identityBusy || identityChoice === savedChoice}>{identityBusy ? 'СОХРАНЯЮ…' : 'Сохранить выбор'} <span>✓</span></button>{identityMessage && <p role="status">{identityMessage}</p>}</div>}<button className="button button-primary" type="button" disabled title="Сетевые операции пока не подключены">Войти в онлайн-операцию <span>↗</span></button></div>
-    </section>
+  const refreshMatch = React.useCallback(async (id) => {
+    if (!id) return
+    try {
+      const result = await apiRequest(`/online/matches/${id}`)
+      setMatch(result.match)
+      setMatchError('')
+    } catch (error) {
+      if (error.message.includes('Операция не найдена')) {
+        localStorage.removeItem(MATCH_KEY)
+        setMatchId('')
+        setMatch(null)
+      } else setMatchError(error.message)
+    }
+  }, [])
 
-    <section className="online-readiness"><div><p className="eyebrow">СОСТОЯНИЕ МОДУЛЯ</p><h2>Подготовка завершена частично</h2></div><div className="online-readiness-row"><span><i className="readiness-ready" />Профиль командира</span><b>ГОТОВ</b></div><div className="online-readiness-row"><span><i className="readiness-ready" />Фракционная идентичность</span><b>ГОТОВА</b></div><div className="online-readiness-row"><span><i />Сетевые сессии</span><b>ОЖИДАНИЕ МОДУЛЯ</b></div></section>
+  React.useEffect(() => {
+    if (matchId) refreshMatch(matchId)
+  }, [matchId, refreshMatch])
+
+  React.useEffect(() => {
+    if (!matchId) return undefined
+    const timer = window.setInterval(() => refreshMatch(matchId), 1800)
+    return () => window.clearInterval(timer)
+  }, [matchId, refreshMatch])
+
+  React.useEffect(() => {
+    if (!queueing) return undefined
+    let cancelled = false
+    const seek = async () => {
+      try {
+        const result = await apiRequest('/online/matchmaking', { method: 'POST', body: JSON.stringify({ faction: factionChoice }) })
+        if (cancelled) return
+        if (result.status === 'matched') {
+          localStorage.setItem(MATCH_KEY, result.matchId)
+          setMatchId(result.matchId)
+          setQueueing(false)
+          setMatchError('')
+        }
+      } catch (error) { if (!cancelled) { setMatchError(error.message); setQueueing(false) } }
+    }
+    seek()
+    const timer = window.setInterval(seek, 2200)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [queueing, factionChoice])
+
+  async function findOpponent() {
+    setMatchError('')
+    setLobbyNotice('')
+    setMatch(null)
+    setSelectedId('')
+    setQueueing(true)
+  }
+
+  async function cancelSearch() {
+    setQueueing(false)
+    try { await apiRequest('/online/matchmaking', { method: 'DELETE' }) } catch (error) { setMatchError(error.message) }
+  }
+
+  async function sendAction(type, payload = {}) {
+    if (!match || busy) return
+    setBusy(true)
+    setToast('')
+    setLastAttack(null)
+    try {
+      const result = await apiRequest(`/online/matches/${match.id}/actions`, { method: 'POST', body: JSON.stringify({ type, payload }) })
+      if (type === 'surrender') {
+        localStorage.removeItem(MATCH_KEY)
+        setMatchId('')
+        setMatch(null)
+        setSelectedId('')
+        setConfirmSurrender(false)
+        setLobbyNotice('Вы сдались. Операция завершена в пользу противника.')
+        return
+      }
+      setMatch(result.match)
+      setMatchError('')
+      if (result.attack) {
+        setLastAttack(result.attack)
+        setToast(`${result.attack.weapon}: ${result.attack.totalDamage} урона · ${result.attack.targetHp} HP осталось`)
+      }
+      if (type === 'end-turn') setSelectedId('')
+    } catch (error) { setMatchError(error.message) }
+    finally { setBusy(false) }
+  }
+
+  function clickCell(x, y) {
+    if (!match) return
+    const unit = match.units.find((item) => item.hp > 0 && item.x === x && item.y === y)
+    if (unit?.playerIndex === match.viewerIndex) { setSelectedId(unit.id); return }
+    if (!isMyTurn || !selectedUnit || selectedUnit.playerIndex !== match.viewerIndex || busy) return
+    if (actionMode === 'move' && !unit) sendAction('move', { unitId: selectedUnit.id, x, y })
+    else if (actionMode === 'attack' && unit) sendAction('attack', { unitId: selectedUnit.id, targetUnitId: unit.id, weaponType })
+  }
+
+  function canMoveTo(x, y) {
+    if (!isMyTurn || actionMode !== 'move' || !selectedUnit || selectedUnit.playerIndex !== match?.viewerIndex || selectedUnit.hasMoved || Math.max(Math.abs(x - selectedUnit.x), Math.abs(y - selectedUnit.y)) !== 1) return false
+    const blocked = match.obstacles.some((cell) => cell.x === x && cell.y === y) || match.units.some((unit) => unit.hp > 0 && unit.x === x && unit.y === y)
+    const blockedCorner = Math.abs(selectedUnit.x - x) === 1 && Math.abs(selectedUnit.y - y) === 1 && match.obstacles.some((cell) => cell.x === selectedUnit.x && cell.y === y) && match.obstacles.some((cell) => cell.x === x && cell.y === selectedUnit.y)
+    return !blocked && !blockedCorner
+  }
+
+  function canAttack(unit) {
+    if (!isMyTurn || actionMode !== 'attack' || !selectedUnit || selectedUnit.hasAttacked || unit.playerIndex === match.viewerIndex) return false
+    const weapon = selectedUnit.weapons[weaponType]
+    const range = Math.max(Math.abs(selectedUnit.x - unit.x), Math.abs(selectedUnit.y - unit.y))
+    if (weaponType === 'melee') return range === 1
+    const engagedAtSource = match.units.some((other) => other.hp > 0 && other.playerIndex !== match.viewerIndex && Math.max(Math.abs(other.x - selectedUnit.x), Math.abs(other.y - selectedUnit.y)) === 1)
+    const engagedTarget = match.units.some((other) => other.hp > 0 && other.playerIndex === unit.playerIndex && other.id !== unit.id && Math.max(Math.abs(other.x - unit.x), Math.abs(other.y - unit.y)) === 1)
+    return range <= weapon.range && !engagedAtSource && !engagedTarget && hasClearShot(selectedUnit, unit, match.obstacles)
+  }
+
+  const activeFaction = match?.players[match.viewerIndex]?.faction || factionChoice
+  const theme = activeFaction === 'chaos' ? 'chaos-theme' : activeFaction === 'orks' ? 'orks-theme' : activeFaction === 'tau' ? 'tau-theme' : ''
+
+  return <main className={`content-page online-page ${theme}`}>
+    <Link className="back-link" to="/campaign">← Карта кампании</Link>
+    <p className="eyebrow">СЕТЕВОЙ РЕЖИМ · ТАКТИЧЕСКАЯ ОПЕРАЦИЯ</p>
+    <h1>Sector: Vermillion</h1>
+
+    {!match && <>
+      <section className="online-connection" aria-label="Сетевая операция">
+        <div className="online-connection-heading"><div><p className="eyebrow">УЗЕЛ СВЯЗИ · VER-IX</p><h2>{queueing ? 'Поиск противника' : 'Выйти на поле боя'}</h2></div><span className={`online-connection-state ${queueing ? 'is-searching' : ''}`}><i />{queueing ? 'ПОИСК' : 'ГОТОВ К СВЯЗИ'}</span></div>
+        <p>Два командира, шесть отрядов и три контрольные точки. Сервер проверяет каждый ход и бросает кубики за бойцов.</p>
+        <div className="online-connection-grid"><div><span>ПОЗЫВНОЙ</span><b>{user?.username || 'НЕИЗВЕСТЕН'}</b></div><div><span>АРМИЯ ОПЕРАЦИИ</span><label className="online-select-wrap"><select aria-label="Армия операции" value={factionChoice} onChange={(event) => setFactionChoice(event.target.value)} disabled={queueing}><option value="imperium">Империум</option><option value="chaos">Хаос</option><option value="orks">Орки</option><option value="tau">Тау</option></select></label></div><div><span>СОСТАВ</span><b>3 ОТРЯДА · 3 ТОЧКИ · 1×1</b></div></div>
+        {lobbyNotice && <p className="online-notice" role="status">{lobbyNotice}</p>}{matchError && <p className="online-error" role="alert">{matchError}</p>}
+        <div className="online-connection-actions"><Link className="text-link" to="/profile">Профиль игрока <span>→</span></Link>{queueing ? <button className="button button-outline" type="button" onClick={cancelSearch}>Отменить поиск</button> : <button className="button button-primary" type="button" onClick={findOpponent}>Найти противника <span>↗</span></button>}</div>
+      </section>
+      {identity && <section className="online-readiness"><div><p className="eyebrow">ИДЕНТИЧНОСТЬ КОМАНДИРА</p><h2>{faction.name}</h2></div><div className="online-identity-row"><label htmlFor="online-subfaction">{identity.label}</label><span className="online-select-wrap"><select id="online-subfaction" value={identityChoice} onChange={(event) => { setIdentityChoice(event.target.value); setIdentityMessage('') }}><option value="">Не выбран</option>{identity.options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></span><button className="button button-outline" type="button" onClick={saveIdentity} disabled={identityBusy || identityChoice === savedChoice}>{identityBusy ? 'СОХРАНЯЮ…' : 'Сохранить'}</button>{identityMessage && <p role="status">{identityMessage}</p>}</div></section>}
+      <section className="online-rules"><p className="eyebrow">ПОЛЕВОЙ УСТАВ · v0.2</p><div className="online-rule-grid"><article><b>12 × 12</b><span>Клеток на поле · восемь направлений хода</span></article><article><b>1 + 1</b><span>Перемещение и одна атака на каждый отряд за ход</span></article><article><b>D6</b><span>Попадание → ранение → спасбросок → урон</span></article><article><b>2 хода</b><span>Удерживай точку двумя своими ходами подряд</span></article></div></section>
+    </>}
+
+    {match && <section className="battle-interface" aria-label="Поле боя">
+      <div className="battle-topline"><div><p className="eyebrow">ОПЕРАЦИЯ · {match.id.toUpperCase()}</p><h2>{match.status === 'finished' ? 'Операция завершена' : `Ход ${match.turn} · ${isMyTurn ? 'ваш ход' : 'ход противника'}`}</h2></div><span className={`online-connection-state ${isMyTurn ? 'is-my-turn' : ''}`}><i />{match.status === 'finished' ? 'ЗАВЕРШЕНО' : isMyTurn ? 'ВАШ ХОД' : `ХОД ${match.players[match.activePlayer]?.username?.toUpperCase()}`}</span></div>
+      {match.status === 'finished' && <div className={`battle-finished-banner ${didWin ? 'is-victory' : 'is-defeat'}`} role="status" aria-live="polite"><span className="eyebrow">{didWin ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ'}</span><h2>{match.winReason}</h2><p>Победитель: <b>{match.players[match.winnerIndex]?.username}</b></p></div>}
+      <div className="battle-scoreboard">{match.players.map((player) => <div key={player.index} className={`battle-player ${player.index === match.activePlayer && match.status === 'active' ? 'is-active' : ''}`}><span className="battle-player-mark">{factionMark[player.faction]}</span><div><small>{FACTION_NAMES[player.faction]}</small><b>{player.username}{player.index === match.viewerIndex ? ' · ВЫ' : ''}</b></div><strong>{match.units.filter((unit) => unit.playerIndex === player.index && unit.hp > 0).length} <small>/ 3</small></strong></div>)}</div>
+      <div className="battle-layout">
+        <div className="battle-board-wrap"><div className="battle-board" role="grid" aria-label="Тактическая карта 12 на 12 клеток" onClick={(event) => { const cell = event.target.closest('[data-x]'); if (cell) clickCell(Number(cell.dataset.x), Number(cell.dataset.y)) }}>{Array.from({ length: 144 }, (_, index) => {
+          const x = index % 12, y = Math.floor(index / 12)
+          const unit = match.units.find((item) => item.hp > 0 && item.x === x && item.y === y)
+          const obstacle = match.obstacles.some((cell) => cell.x === x && cell.y === y)
+          const inCover = match.cover.some((cell) => cell.x === x && cell.y === y)
+          const point = match.controlPoints.find((cell) => cell.x === x && cell.y === y)
+          const selected = unit?.id === selectedId
+          const reachable = canMoveTo(x, y)
+          const targetable = unit && canAttack(unit)
+          const cellClass = ['battle-cell', (x + y) % 2 ? 'cell-dark' : '', obstacle ? 'cell-obstacle' : '', inCover ? 'cell-cover' : '', point ? 'cell-objective' : '', unit ? `cell-unit faction-${match.players[unit.playerIndex].faction}` : '', selected ? 'is-selected' : '', reachable ? 'is-reachable' : '', targetable ? 'is-targetable' : ''].filter(Boolean).join(' ')
+          return <button key={cellLabel(x, y)} type="button" role="gridcell" data-x={x} data-y={y} aria-label={`${cellLabel(x, y)}${unit ? ` · ${unit.name} · ${unit.hp} HP` : obstacle ? ' · препятствие' : point ? ' · контрольная точка' : ''}`} className={cellClass} disabled={busy || match.status !== 'active'}>
+            {point && <span className={`objective-marker ${point.ownerIndex !== null ? `owned-${match.players[point.ownerIndex].faction}` : ''}`}>{point.capture ? `${point.capture.turns}/2` : '◆'}</span>}
+            {obstacle && <span className="obstacle-mark">▧</span>}{inCover && !obstacle && <span className="cover-mark">⌂</span>}
+            {unit && <><span className="unit-mark">{factionMark[match.players[unit.playerIndex].faction]}</span><span className="unit-hp">{unit.hp}<i>/ {unit.maxHp}</i></span>{unit.id === selectedId && <span className="unit-cell-name">{unit.name}</span>}</>}
+          </button>
+        })}</div><div className="battle-board-legend"><span><i className="legend-imperium" />Империум</span><span><i className="legend-orks" />Орки</span><span><i className="legend-objective" />Контрольная точка</span><span><i className="legend-cover" />Укрытие</span></div></div>
+        <aside className="battle-sidebar">
+          <section className="battle-panel objective-panel"><p className="eyebrow">ЦЕЛИ ОПЕРАЦИИ</p>{match.controlPoints.map((point) => <div className="objective-row" key={point.id}><span className={`objective-status ${point.ownerIndex !== null ? `owned-${match.players[point.ownerIndex].faction}` : ''}`} /> <b>ТОЧКА {point.id.slice(-1)}</b><span>{point.ownerIndex === null ? point.capture ? `${FACTION_NAMES[match.players[point.capture.playerIndex].faction]} · ${point.capture.turns}/2` : 'НЕЙТРАЛЬНАЯ' : FACTION_NAMES[match.players[point.ownerIndex].faction].toUpperCase()}</span></div>)}</section>
+          {lastAttack && <section className="battle-panel battle-roll-panel" role="status" aria-live="polite"><p className="eyebrow">БРОСКИ · {lastAttack.weapon}</p><div className="battle-rolls">{lastAttack.attacks.map((roll, index) => <div className="battle-roll" key={`${index}-${roll.hit}-${roll.wound}-${roll.save}`}><b>Атака {index + 1}</b><span className="battle-dice-sequence"><i className="battle-die">{roll.hit}</i>{roll.wound !== null && <><span>→</span><i className="battle-die">{roll.wound}</i></>}{roll.save !== null && <><span>→</span><i className={`battle-die ${roll.damage ? 'die-failed' : 'die-saved'}`}>{roll.save}</i></>}</span><small>{roll.damage ? `${roll.damage} урона` : roll.save !== null ? 'сохранено' : roll.wound !== null ? 'не пробито' : 'мимо'}</small></div>)}</div></section>}
+          <section className="battle-panel"><p className="eyebrow">АКТИВНЫЙ ОТРЯД</p>{selectedUnit ? <><h3>{selectedUnit.name}</h3><div className="unit-stats"><span><b>{selectedUnit.hp}/{selectedUnit.maxHp}</b> HP</span><span><b>{selectedUnit.toughness}</b> T</span><span><b>{selectedUnit.save}+</b> SV</span></div><div className="unit-armory">{Object.entries(selectedUnit.weapons).map(([type, weapon]) => <div key={type}><b>{weapon.name}</b><span>{weapon.attacks} атаки · {type === 'ranged' ? 'BS' : 'WS'} {weapon.skill}+ · S {weapon.strength} · AP {weapon.ap} · D {weapon.damage} · {type === 'ranged' ? `дальн. ${weapon.range}` : 'ближний бой'}</span></div>)}</div><div className="unit-actions"><button type="button" className={actionMode === 'move' ? 'is-active' : ''} onClick={() => setActionMode('move')} disabled={!isMyTurn}>Перемещение</button><button type="button" className={actionMode === 'attack' ? 'is-active' : ''} onClick={() => setActionMode('attack')} disabled={!isMyTurn}>Атака</button></div>{actionMode === 'attack' && <div className="weapon-picker">{['ranged', 'melee'].map((type) => <button type="button" key={type} className={weaponType === type ? 'is-active' : ''} onClick={() => setWeaponType(type)}>{type === 'ranged' ? 'Стрельба' : 'Ближний бой'}</button>)}</div>}<p className="battle-hint">{!isMyTurn ? 'Ожидай хода противника.' : actionMode === 'move' ? selectedUnit.hasMoved ? 'Отряд уже переместился в этом ходу.' : 'Выбери соседнюю подсвеченную клетку.' : selectedUnit.hasAttacked ? 'Отряд уже атаковал в этом ходу.' : 'Выбери подсвеченный вражеский отряд.'}</p></> : <p className="battle-hint">Выбери свой отряд на поле, чтобы увидеть приказы.</p>}</section>
+          {match.status === 'active' && <button className="button button-primary battle-end-turn" type="button" disabled={!isMyTurn || busy} onClick={() => sendAction('end-turn')}>Завершить ход <span>→</span></button>}
+          {match.status === 'active' && !confirmSurrender && <button className="button button-surrender" type="button" disabled={busy} onClick={() => setConfirmSurrender(true)}>Сдаться и выйти</button>}
+          {match.status === 'active' && confirmSurrender && <section className="battle-surrender-confirm" role="alertdialog" aria-labelledby="surrender-title"><b id="surrender-title">Сдаться и завершить бой?</b><p>Противнику будет засчитана победа. Это действие нельзя отменить.</p><div><button className="button button-surrender-confirm" type="button" disabled={busy} onClick={() => sendAction('surrender')}>{busy ? 'ЗАВЕРШАЮ…' : 'Подтвердить сдачу'}</button><button className="button button-outline" type="button" disabled={busy} onClick={() => setConfirmSurrender(false)}>Продолжить бой</button></div></section>}
+          {match.status === 'finished' && <div className={`battle-result ${didWin ? 'is-victory' : 'is-defeat'}`}><button type="button" className="button button-outline" onClick={() => { localStorage.removeItem(MATCH_KEY); setMatchId(''); setMatch(null); setMatchError('') }}>Вернуться в узел связи</button></div>}
+          {toast && <p className="battle-toast" role="status">{toast}</p>}{matchError && <p className="online-error" role="alert">{matchError}</p>}
+          <section className="battle-panel battle-log-panel"><p className="eyebrow">ЖУРНАЛ ОПЕРАЦИИ</p><div className="battle-log" aria-live="polite">{[...match.log].reverse().map((entry) => <p key={entry.id}><small>ХОД {entry.turn}</small>{entry.text}</p>)}</div></section>
+        </aside>
+      </div>
+    </section>}
   </main>
 }

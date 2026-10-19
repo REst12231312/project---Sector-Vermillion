@@ -6,6 +6,7 @@ import { randomBytes } from 'node:crypto'
 const dataDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data')
 const progressPath = path.join(dataDirectory, 'progress.json')
 const usersPath = path.join(dataDirectory, 'users.json')
+const onlineStatePath = path.join(dataDirectory, 'online-state.json')
 function readJson(filePath, fallback) { try { return JSON.parse(fs.readFileSync(filePath, 'utf8')) } catch { return fallback } }
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
@@ -22,6 +23,8 @@ export function saveProgress(profileId, state) {
   writeJson(progressPath, progress)
   return state
 }
+export function readOnlineState() { return readJson(onlineStatePath, { sessions: [], waitingPlayers: [] }) }
+export function saveOnlineState(state) { writeJson(onlineStatePath, state); return state }
 export function readUsers() { return readJson(usersPath, []) }
 export function findUser(username) { return readUsers().find((user) => user.username === username) ?? null }
 export function findUserById(id) { return readUsers().find((user) => user.id === id) ?? null }

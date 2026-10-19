@@ -35,8 +35,8 @@ export default function HomePages() {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow"><span className="signal-dot" /> ДОБРО ПОЖАЛОВАТЬ, {user?.username || 'АРХИВАРИУС'}</p>
-          <h1>{tau ? <>Империя Тау.<br /><em>Твой приказ служит Высшему благу.</em></> : orks ? <>Зелёный прилив.<br /><em>Твой Waaagh! ищет большую драку.</em></> : chaos ? <>Ересь Хоруса.<br /><em>Твой приказ меняет ход мятежа.</em></> : <>История Империума.<br /><em>Твой приказ меняет поход.</em></>}</h1>
-          <p className="hero-lead">{tau ? 'Веди экспедиции каст через Аркунашу и Дамокл к событиям Пятой сферы. Координируй разведку и огневую поддержку, открывая досье о Фарсайте и Высшем благе.' : orks ? 'Собери орду, сразись за Улланор и продолжи путь в 41-е тысячелетие. Открывай досье об орочьей империи Урлакка Урга, Триумфе Улланора и войнах с Империумом и Хаосом.' : chaos ? 'Веди силы Хаоса от первых заговоров через Исстван, Калт и осаду Терры к Очищению. Принимай решения и открывай досье о Варпе, падении Хоруса и изгнании предателей.' : 'Пройди восемь сюжетных операций: от рождения Империума и поиска Примархов до предупреждения Гарро, Исствана, Калта, обороны Терры и Очищения. Принимай решения, береги снабжение и открывай архивные главы.'}</p>
+          <h1>Галактика на грани.<br /><em>Тысяча миров. Десять тысяч лет войны. Узнай, как рушилась и горела Галактика</em></h1>
+          <p className="hero-lead">Исследуй историю Империума, Хаоса и других фракций, узнай о великих кампаниях и героях 41-го тысячелетия. Каждый архивный сигнал открывает новую часть вселенной Warhammer.</p>
           <div className="hero-actions">
             <Link className="button button-primary" to={user ? '/campaign' : '/register'}>{user ? 'Начать кампанию' : 'Вступить в ряды'} <span>↗</span></Link>
             <Link className="text-link" to={user ? faction.archivePath : '/factions'}>{user ? `Архив: ${faction.shortName}` : 'О фракции'} <span>→</span></Link>
@@ -50,14 +50,14 @@ export default function HomePages() {
         </div>
       </section>
 
-      <section className="mission-strip">
+      {user && <section className="mission-strip">
         <div className="mission-icon">✦</div>
         <div className="mission-copy"><span className="eyebrow">КАМПАНИЯ · {faction.shortName.toUpperCase()}</span><h2>{campaignComplete ? 'Все открытые операции завершены' : `Операция ${String(nextLevelNumber).padStart(2, '0')} ждёт приказа`}</h2><p>{campaignComplete ? `Все досье фракции ${faction.shortName} ждут в архиве.` : 'Каждая победа открывает новую главу лора и следующую операцию.'}</p></div>
         <div className="mission-reward"><span>ПРОЙДЕНО</span><b>{completed}/{levelIds.length}</b></div>
         <Link className={`button ${campaignComplete ? 'button-done' : 'button-outline'}`} to={user ? '/campaign' : '/register'}>{campaignComplete ? 'Открыть кампанию' : user ? 'Продолжить' : 'Вступить в ряды'} <span>→</span></Link>
-      </section>
+      </section>}
 
-      <section className={`quiz-promo ${chaos ? 'chaos-theme' : orks ? 'orks-theme' : ''}`}><div className="quiz-promo-mark">{faction.mark}</div><div><p className="eyebrow">СЮЖЕТНАЯ КАМПАНИЯ · {levelIds.length} ОПЕРАЦИЙ</p><h2>{orks ? 'Собирай Waaagh!' : chaos ? 'Веди восстание' : 'Командуй экспедицией'}</h2><p>Выбирай тактику, следи за ресурсами и открывай архивные главы истории Warhammer 40,000.</p></div><Link className="button button-outline" to={user ? '/campaign' : '/register'}>{user ? 'К карте операций' : 'Вступить в ряды'} <span>→</span></Link></section>
+      {user && <section className={`quiz-promo ${chaos ? 'chaos-theme' : orks ? 'orks-theme' : ''}`}><div className="quiz-promo-mark">{faction.mark}</div><div><p className="eyebrow">СЮЖЕТНАЯ КАМПАНИЯ · {levelIds.length} ОПЕРАЦИЙ</p><h2>{orks ? 'Собирай Waaagh!' : chaos ? 'Веди восстание' : 'Командуй экспедицией'}</h2><p>Выбирай тактику, следи за ресурсами и открывай архивные главы истории Warhammer 40,000.</p></div><Link className="button button-outline" to="/campaign">К карте операций <span>→</span></Link></section>}
 
       <section className="section-block">
         <div className="section-heading"><div><p className="eyebrow">ФРАКЦИИ КАМПАНИИ</p><h2>{faction.name}</h2></div><Link className="text-link" to="/factions">Открыть досье <span>→</span></Link></div>

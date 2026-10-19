@@ -3,6 +3,7 @@ import { loreEntries } from '../data/gameData.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { defectToChaos } from '../services/authService.js'
 import { updateUserOnlineIdentity } from '../storage.js'
+import { cancelQueue, getMatch, performMatchAction, queueForMatch } from '../services/battleService.js'
 import {
   answerQuiz, completeCampaign, discoverEntry, getFactionFragments, recordSignalIntercept,
   getKnowledge, getState, readEntry, recordInterceptedLore, studyFaction,
@@ -23,6 +24,25 @@ router.put('/online-profile', requireAuth, (req, res) => {
   const user = updateUserOnlineIdentity(req.user.sub, { [field]: value })
   if (!user) return res.status(404).json({ error: 'Профиль не найден.' })
   res.json({ user: { id: user.id, username: user.username, faction, chapter: user.onlineIdentity?.chapter || '', legion: user.onlineIdentity?.legion || '' } })
+})
+router.post('/online/matchmaking', requireAuth, (req, res) => {
+  const result = queueForMatch({ id: req.user.sub, username: req.user.username }, req.body?.faction)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.json(result)
+})
+router.delete('/online/matchmaking', requireAuth, (req, res) => {
+  cancelQueue(req.user.sub)
+  res.json({ status: 'cancelled' })
+})
+router.get('/online/matches/:matchId', requireAuth, (req, res) => {
+  const match = getMatch(req.params.matchId, req.user.sub)
+  if (!match) return res.status(404).json({ error: 'Операция не найдена или доступ к ней закрыт.' })
+  res.json({ match })
+})
+router.post('/online/matches/:matchId/actions', requireAuth, (req, res) => {
+  const result = performMatchAction(req.params.matchId, req.user.sub, req.body?.type, req.body?.payload)
+  if (result.error) return res.status(result.status || 400).json({ error: result.error })
+  res.json(result)
 })
 router.post('/campaign/complete', requireAuth, (req, res) => {
   const result = completeCampaign(req.user.sub, req.user.faction, req.body?.levelId)
