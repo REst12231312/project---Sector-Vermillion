@@ -58,7 +58,7 @@ function chooseAttack(state, playerId, unitId) {
   const units = state.units.filter((unit) => unit.id === unitId && unit.playerIndex === state.activePlayer && unit.hp > 0 && !unit.hasAttacked)
   let best = null
   for (const unit of units) for (const option of availableAttacks(state, playerId, unit.id)) {
-    const candidate = { ...option, attackerUnitId: unit.id }
+    const candidate = { ...option, unitId: unit.id, attackerUnitId: unit.id }
     const value = attackValue(state, candidate)
     if (!best || value > best.value) best = { ...candidate, value }
   }
@@ -162,14 +162,12 @@ function simulate(index) {
     else if (alive[0] !== alive[1]) winnerIndex = alive[0] > alive[1] ? 0 : 1
   }
   const winnerFaction = winnerIndex === null ? 'draw' : state.players[winnerIndex].faction
-  const attackEntries = state.log.filter((entry) => entry.text.includes(' → '))
-  const damageDealt = attackEntries.reduce((total, entry) => total + Number(entry.text.match(/\((\d+) урона\)/)?.[1] || 0), 0)
   return {
     winnerFaction, turns, reason: state.winReason || (winnerIndex === null ? 'draw' : 'timeout'),
     matchup,
-    attackCount: attackEntries.length,
-    damageDealt,
-    destroyedUnits: state.units.filter((unit) => unit.hp <= 0).length,
+    attackCount: state.stats?.attackActions || 0,
+    damageDealt: state.stats?.damage || 0,
+    destroyedUnits: state.stats?.destroyedUnits || 0,
     topFaction: state.players[topPlayerIndex].faction,
     firstFaction: state.players[firstPlayerIndex].faction,
     firstPlayerWon: winnerIndex === firstPlayerIndex,

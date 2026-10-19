@@ -11,3 +11,31 @@
 .battle-roll-panel{border-color:#806541;background:linear-gradient(145deg,#252116,#171916)}.battle-rolls{display:grid;gap:6px}.battle-roll{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #34362f;color:#c9c4b8;font:9px var(--mono)}.battle-roll>b{color:#d6c59f}.battle-roll>small{min-width:62px;text-align:right;color:#a7a396;font-size:8px}.battle-dice-sequence{display:flex;align-items:center;gap:4px;color:#8c8778}.battle-die{width:22px;height:22px;display:grid;place-items:center;border:1px solid #a58b59;border-radius:5px;background:#211e17;color:#f3d58b;font:700 11px var(--mono);font-style:normal;box-shadow:0 2px 5px #0006;animation:battle-die-roll .42s cubic-bezier(.18,.75,.3,1) both}.battle-die:nth-of-type(2){animation-delay:.08s}.battle-die:nth-of-type(3){animation-delay:.16s}.battle-die.die-failed{border-color:#a65243;color:#f1947d}.battle-die.die-saved{border-color:#748c55;color:#c2dc91}@keyframes battle-die-roll{0%{opacity:0;transform:translateY(-8px) rotate(-45deg) scale(.55)}70%{opacity:1;transform:translateY(2px) rotate(8deg) scale(1.08)}100%{transform:translateY(0) rotate(0) scale(1)}}
 .battle-cell.cell-unit.faction-chaos{background:radial-gradient(circle,#704c70 0,#50374f 67%,#342735 100%)}.battle-cell.cell-unit.faction-tau{background:radial-gradient(circle,#4b7690 0,#34576d 67%,#283d4b 100%)}.faction-chaos .unit-mark{border-color:#d3abd6;color:#efc5f3}.faction-tau .unit-mark{border-color:#9ad5df;color:#d1f5f7}
 .objective-marker.owned-chaos,.objective-status.owned-chaos{border-color:#b789bd;color:#d4a3de;background:#704c7033}.objective-marker.owned-tau,.objective-status.owned-tau{border-color:#77b5c9;color:#9ad5df;background:#4b769033}
+
+.online-private-lobby{margin-top:28px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.online-private-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.online-private-heading .eyebrow{margin:0 0 7px}
+.online-private-heading h2{margin:0;font:600 22px/1.15 var(--display);text-transform:uppercase}
+.online-private-description{max-width:700px;color:var(--muted);font-size:12px;line-height:1.6}
+.online-private-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}
+.online-private-actions .button{min-height:40px}
+.online-room-join{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.online-room-join .online-select-wrap{width:190px}
+.online-room-join input{width:100%;height:40px;padding:0 11px;border:1px solid #494438;border-radius:2px;background:#171916;color:var(--ink);font:12px var(--mono);letter-spacing:1px}
+.online-room-join input::placeholder{color:#77766c}
+.online-room-code{display:inline-block;margin:5px 0 14px;padding:9px 14px;border:1px solid #806541;background:#211e17;color:#f3d58b;font:700 22px var(--mono);letter-spacing:3px}
+.online-room-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--line);background:#151613}
+.online-room-player{display:grid;gap:7px;min-height:88px;padding:12px 14px;border-right:1px solid var(--line)}
+.online-room-player:last-child{border-right:0}
+.online-room-player b{font:500 15px var(--display)}
+.online-room-player>span:last-child{color:var(--muted);font:9px var(--mono)}
+.online-room-player.is-empty{opacity:.65}
+.online-room-presence{display:flex;align-items:center;gap:6px;color:#919187;font:8px var(--mono);letter-spacing:.5px}
+.online-room-presence i,.battle-presence{width:6px;height:6px;border-radius:50%;background:#8a8c7e;display:inline-block;font-style:normal}
+.online-room-presence i.is-connected{background:#a4c576;box-shadow:0 0 7px #a4c576}
+.battle-turn-countdown{margin:7px 0 0;color:var(--muted);font:10px var(--mono)}
+.battle-turn-countdown.is-running b{color:#e8c979}
+.battle-presence{width:auto;height:auto;margin-left:3px;background:none!important;color:#a3a396;font:normal 8px var(--mono)}
+.battle-presence.is-offline{color:#e3a28d}
+.battle-rematch{width:100%;min-height:40px}
+@media(max-width:620px){.online-private-actions,.online-room-join{align-items:stretch;flex-direction:column}.online-room-join .online-select-wrap{width:100%}.online-room-players{grid-template-columns:1fr}.online-room-player{border-right:0;border-bottom:1px solid var(--line)}.online-room-player:last-child{border-bottom:0}.online-private-heading{align-items:flex-start}}

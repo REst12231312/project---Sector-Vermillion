@@ -6,6 +6,7 @@ import { apiRequest, getCurrentUser, updateCurrentUser } from '../utils/api'
 import './OnlinePage.css'
 
 const MATCH_KEY = 'sv-online-match'
+const ROOM_KEY = 'sv-online-room'
 const ONLINE_FACTIONS = ['imperium', 'chaos', 'orks', 'tau']
 const FACTION_NAMES = { imperium: 'Империум', chaos: 'Хаос', orks: 'Орки', tau: 'Тау' }
 const factionMark = { imperium: 'I', chaos: '⛧', orks: 'W', tau: 'T' }
@@ -36,6 +37,12 @@ export default function OnlinePage() {
   const [queueing, setQueueing] = React.useState(false)
   const [lobbyNotice, setLobbyNotice] = React.useState('')
   const [matchId, setMatchId] = React.useState(() => localStorage.getItem(MATCH_KEY) || '')
+  const [roomCode, setRoomCode] = React.useState(() => localStorage.getItem(ROOM_KEY) || '')
+  const [room, setRoom] = React.useState(null)
+  const [roomCodeInput, setRoomCodeInput] = React.useState('')
+  const [roomBusy, setRoomBusy] = React.useState(false)
+  const [roomError, setRoomError] = React.useState('')
+  const [roomNotice, setRoomNotice] = React.useState('')
   const [match, setMatch] = React.useState(null)
   const [matchError, setMatchError] = React.useState('')
   const [selectedId, setSelectedId] = React.useState('')
@@ -45,7 +52,9 @@ export default function OnlinePage() {
   const [toast, setToast] = React.useState('')
   const [lastAttack, setLastAttack] = React.useState(null)
   const [confirmSurrender, setConfirmSurrender] = React.useState(false)
+  const [clockNow, setClockNow] = React.useState(Date.now())
   const isMyTurn = match?.status === 'active' && match.activePlayer === match.viewerIndex
+  const activeMatchId = match?.status === 'active' ? match.id : ''
   const didWin = match?.status === 'finished' && match.winnerIndex === match.viewerIndex
   const selectedUnit = match?.units.find((unit) => unit.id === selectedId) || null
   const savedChoice = identity ? user?.[identity.field] || '' : ''
@@ -66,7 +75,7 @@ export default function OnlinePage() {
   const refreshMatch = React.useCallback(async (id) => {
     if (!id) return
     try {
-      const result = await apiRequest(`/online/matches/${id}`)
+      const result = await apiRequest(`/online/matches/${id}/presence`, { method: 'POST', body: '{}' })
       setMatch(result.match)
       setMatchError('')
     } catch (error) {
@@ -87,6 +96,41 @@ export default function OnlinePage() {
     const timer = window.setInterval(() => refreshMatch(matchId), 1800)
     return () => window.clearInterval(timer)
   }, [matchId, refreshMatch])
+
+  const refreshRoom = React.useCallback(async (code) => {
+    if (!code) return
+    try {
+      const result = await apiRequest(`/online/rooms/${encodeURIComponent(code)}`)
+      setRoom(result.room)
+      setRoomError('')
+      if (result.room.status === 'active' && result.room.matchId && result.room.matchId !== matchId) {
+        localStorage.setItem(MATCH_KEY, result.room.matchId)
+        setMatchId(result.room.matchId)
+      }
+    } catch (error) {
+      if (error.message.includes('Комната не найдена')) {
+        localStorage.removeItem(ROOM_KEY)
+        setRoomCode('')
+        setRoom(null)
+      } else setRoomError(error.message)
+    }
+  }, [matchId])
+
+  React.useEffect(() => {
+    if (roomCode) refreshRoom(roomCode)
+  }, [roomCode, refreshRoom])
+
+  React.useEffect(() => {
+    if (!roomCode) return undefined
+    const timer = window.setInterval(() => refreshRoom(roomCode), 1800)
+    return () => window.clearInterval(timer)
+  }, [roomCode, refreshRoom])
+
+  React.useEffect(() => {
+    if (!activeMatchId) return undefined
+    const timer = window.setInterval(() => setClockNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [activeMatchId])
 
   React.useEffect(() => {
     if (!queueing) return undefined
@@ -121,20 +165,81 @@ export default function OnlinePage() {
     try { await apiRequest('/online/matchmaking', { method: 'DELETE' }) } catch (error) { setMatchError(error.message) }
   }
 
+  async function createRoom() {
+    if (roomBusy) return
+    setRoomBusy(true); setRoomError(''); setRoomNotice('')
+    try {
+      const result = await apiRequest('/online/rooms', { method: 'POST', body: JSON.stringify({ faction: factionChoice }) })
+      localStorage.setItem(ROOM_KEY, result.room.code)
+      setRoomCode(result.room.code); setRoom(result.room); setLobbyNotice('')
+    } catch (error) { setRoomError(error.message) }
+    finally { setRoomBusy(false) }
+  }
+
+  async function joinRoom() {
+    if (roomBusy || !roomCodeInput.trim()) return
+    setRoomBusy(true); setRoomError(''); setRoomNotice('')
+    try {
+      const result = await apiRequest(`/online/rooms/${encodeURIComponent(roomCodeInput.trim())}/join`, { method: 'POST', body: JSON.stringify({ faction: factionChoice }) })
+      localStorage.setItem(ROOM_KEY, result.room.code)
+      setRoomCode(result.room.code); setRoom(result.room); setRoomCodeInput('')
+    } catch (error) { setRoomError(error.message) }
+    finally { setRoomBusy(false) }
+  }
+
+  async function toggleReady() {
+    if (!room || roomBusy) return
+    setRoomBusy(true); setRoomError('')
+    try {
+      const player = room.players.find((member) => member.userId === room.viewerId)
+      const result = await apiRequest(`/online/rooms/${encodeURIComponent(room.code)}/ready`, { method: 'PUT', body: JSON.stringify({ ready: !player?.ready }) })
+      setRoom(result.room)
+      if (result.matchId) { localStorage.setItem(MATCH_KEY, result.matchId); setMatchId(result.matchId) }
+    } catch (error) { setRoomError(error.message) }
+    finally { setRoomBusy(false) }
+  }
+
+  async function leaveRoom() {
+    if (!room || roomBusy) return
+    setRoomBusy(true); setRoomError('')
+    try {
+      await apiRequest(`/online/rooms/${encodeURIComponent(room.code)}`, { method: 'DELETE' })
+      localStorage.removeItem(ROOM_KEY); setRoomCode(''); setRoom(null); setRoomNotice('Ты покинул комнату.')
+    } catch (error) { setRoomError(error.message) }
+    finally { setRoomBusy(false) }
+  }
+
+  async function requestRematch() {
+    if (!room || roomBusy) return
+    setRoomBusy(true); setRoomError(''); setRoomNotice('')
+    try {
+      const result = await apiRequest(`/online/rooms/${encodeURIComponent(room.code)}/rematch`, { method: 'POST', body: '{}' })
+      setRoom(result.room)
+      if (result.matchId && result.room.status === 'active') {
+        localStorage.setItem(MATCH_KEY, result.matchId); setMatchId(result.matchId); setMatch(null)
+      } else setRoomNotice('Готовность к повторному бою отправлена. Ждём соперника.')
+    } catch (error) { setRoomError(error.message) }
+    finally { setRoomBusy(false) }
+  }
+
   async function sendAction(type, payload = {}) {
     if (!match || busy) return
     setBusy(true)
     setToast('')
     setLastAttack(null)
     try {
-      const result = await apiRequest(`/online/matches/${match.id}/actions`, { method: 'POST', body: JSON.stringify({ type, payload }) })
+      const actionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const result = await apiRequest(`/online/matches/${match.id}/actions`, { method: 'POST', body: JSON.stringify({ type, payload, actionId }) })
       if (type === 'surrender') {
-        localStorage.removeItem(MATCH_KEY)
-        setMatchId('')
-        setMatch(null)
-        setSelectedId('')
+        if (match.roomCode) setMatch(result.match)
+        else {
+          localStorage.removeItem(MATCH_KEY)
+          setMatchId('')
+          setMatch(null)
+          setSelectedId('')
+          setLobbyNotice('Вы сдались. Операция завершена в пользу противника.')
+        }
         setConfirmSurrender(false)
-        setLobbyNotice('Вы сдались. Операция завершена в пользу противника.')
         return
       }
       setMatch(result.match)
@@ -188,16 +293,30 @@ export default function OnlinePage() {
         <p>Два командира, шесть отрядов и три контрольные точки. Сервер проверяет каждый ход и бросает кубики за бойцов.</p>
         <div className="online-connection-grid"><div><span>ПОЗЫВНОЙ</span><b>{user?.username || 'НЕИЗВЕСТЕН'}</b></div><div><span>АРМИЯ ОПЕРАЦИИ</span><label className="online-select-wrap"><select aria-label="Армия операции" value={factionChoice} onChange={(event) => setFactionChoice(event.target.value)} disabled={queueing}><option value="imperium">Империум</option><option value="chaos">Хаос</option><option value="orks">Орки</option><option value="tau">Тау</option></select></label></div><div><span>СОСТАВ</span><b>3 ОТРЯДА · 3 ТОЧКИ · 1×1</b></div></div>
         {lobbyNotice && <p className="online-notice" role="status">{lobbyNotice}</p>}{matchError && <p className="online-error" role="alert">{matchError}</p>}
-        <div className="online-connection-actions"><Link className="text-link" to="/profile">Профиль игрока <span>→</span></Link>{queueing ? <button className="button button-outline" type="button" onClick={cancelSearch}>Отменить поиск</button> : <button className="button button-primary" type="button" onClick={findOpponent}>Найти противника <span>↗</span></button>}</div>
+        <div className="online-connection-actions"><Link className="text-link" to="/profile">Профиль игрока <span>→</span></Link>{queueing ? <button className="button button-outline" type="button" onClick={cancelSearch}>Отменить поиск</button> : <button className="button button-primary" type="button" disabled={Boolean(roomCode)} onClick={findOpponent}>Найти противника <span>↗</span></button>}</div>
+      </section>
+      <section className="online-private-lobby" aria-label="Частная комната">
+        <div className="online-private-heading"><div><p className="eyebrow">КОМНАТА ПО ПРИГЛАШЕНИЮ</p><h2>{room ? `КОД ${room.code}` : 'Сыграть с другом'}</h2></div>{room && <span className="online-connection-state"><i />{room.status === 'waiting' ? 'ОЖИДАНИЕ' : room.status === 'finished' ? 'БОЙ ЗАВЕРШЁН' : 'МАТЧ'}</span>}</div>
+        {room ? <>
+          <p className="online-private-description">Отправь код другу. В комнату могут войти только два игрока; после готовности обоих начнётся матч.</p>
+          <div className="online-room-code" aria-label="Код приглашения">{room.code}</div>
+          <div className="online-room-players">{room.players.map((member) => <div className="online-room-player" key={member.userId}><span className="online-room-presence"><i className={member.connected ? 'is-connected' : ''} />{member.connected ? 'НА СВЯЗИ' : 'НЕТ СВЯЗИ'}</span><b>{member.username}{member.userId === room.viewerId ? ' · ВЫ' : ''}</b><span>{FACTION_NAMES[member.faction]} · {member.ready ? 'ГОТОВ' : 'НЕ ГОТОВ'}</span></div>)}{room.players.length < 2 && <div className="online-room-player is-empty"><b>Ожидание второго игрока…</b><span>Ещё никто не вошёл по коду</span></div>}</div>
+          {roomError && <p className="online-error" role="alert">{roomError}</p>}{roomNotice && <p className="online-notice" role="status">{roomNotice}</p>}
+          <div className="online-private-actions">{room.status === 'waiting' && <button className="button button-primary" type="button" disabled={roomBusy || room.players.length !== 2} onClick={toggleReady}>{roomBusy ? 'СОХРАНЯЮ…' : room.players.find((member) => member.userId === room.viewerId)?.ready ? 'Снять готовность' : 'Готов'}</button>}{room.status !== 'active' && <button className="button button-outline" type="button" disabled={roomBusy} onClick={leaveRoom}>Покинуть комнату</button>}</div>
+        </> : <>
+          <p className="online-private-description">Создай комнату и пришли код приглашения или введи код друга, чтобы присоединиться.</p>
+          <div className="online-private-actions"><button className="button button-primary" type="button" disabled={roomBusy || queueing} onClick={createRoom}>{roomBusy ? 'СОЗДАЮ…' : 'Создать комнату'}</button><label className="online-room-join"><span className="online-select-wrap"><input aria-label="Код комнаты" value={roomCodeInput} onChange={(event) => setRoomCodeInput(event.target.value.toUpperCase())} placeholder="КОД КОМНАТЫ" maxLength={8} /></span><button className="button button-outline" type="button" disabled={roomBusy || queueing || !roomCodeInput.trim()} onClick={joinRoom}>Войти по коду</button></label></div>
+          {roomError && <p className="online-error" role="alert">{roomError}</p>}{roomNotice && <p className="online-notice" role="status">{roomNotice}</p>}
+        </>}
       </section>
       {identity && <section className="online-readiness"><div><p className="eyebrow">ИДЕНТИЧНОСТЬ КОМАНДИРА</p><h2>{faction.name}</h2></div><div className="online-identity-row"><label htmlFor="online-subfaction">{identity.label}</label><span className="online-select-wrap"><select id="online-subfaction" value={identityChoice} onChange={(event) => { setIdentityChoice(event.target.value); setIdentityMessage('') }}><option value="">Не выбран</option>{identity.options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></span><button className="button button-outline" type="button" onClick={saveIdentity} disabled={identityBusy || identityChoice === savedChoice}>{identityBusy ? 'СОХРАНЯЮ…' : 'Сохранить'}</button>{identityMessage && <p role="status">{identityMessage}</p>}</div></section>}
       <section className="online-rules"><p className="eyebrow">ПОЛЕВОЙ УСТАВ · v0.2</p><div className="online-rule-grid"><article><b>12 × 12</b><span>Клеток на поле · восемь направлений хода</span></article><article><b>1 + 1</b><span>Перемещение и одна атака на каждый отряд за ход</span></article><article><b>D6</b><span>Попадание → ранение → спасбросок → урон</span></article><article><b>2 хода</b><span>Удерживай точку двумя своими ходами подряд</span></article></div></section>
     </>}
 
     {match && <section className="battle-interface" aria-label="Поле боя">
-      <div className="battle-topline"><div><p className="eyebrow">ОПЕРАЦИЯ · {match.id.toUpperCase()}</p><h2>{match.status === 'finished' ? 'Операция завершена' : `Ход ${match.turn} · ${isMyTurn ? 'ваш ход' : 'ход противника'}`}</h2></div><span className={`online-connection-state ${isMyTurn ? 'is-my-turn' : ''}`}><i />{match.status === 'finished' ? 'ЗАВЕРШЕНО' : isMyTurn ? 'ВАШ ХОД' : `ХОД ${match.players[match.activePlayer]?.username?.toUpperCase()}`}</span></div>
+      <div className="battle-topline"><div><p className="eyebrow">ОПЕРАЦИЯ · {match.id.toUpperCase()}</p><h2>{match.status === 'finished' ? 'Операция завершена' : `Ход ${match.turn} · ${isMyTurn ? 'ваш ход' : 'ход противника'}`}</h2>{match.status === 'active' && <p className={`battle-turn-countdown ${isMyTurn ? 'is-running' : ''}`}>До конца хода: <b>{Math.max(0, Math.ceil(((match.turnDeadlineAt || clockNow) - clockNow) / 1000))} сек.</b></p>}</div><span className={`online-connection-state ${isMyTurn ? 'is-my-turn' : ''}`}><i />{match.status === 'finished' ? 'ЗАВЕРШЕНО' : isMyTurn ? 'ВАШ ХОД' : `ХОД ${match.players[match.activePlayer]?.username?.toUpperCase()}`}</span></div>
       {match.status === 'finished' && <div className={`battle-finished-banner ${didWin ? 'is-victory' : 'is-defeat'}`} role="status" aria-live="polite"><span className="eyebrow">{didWin ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ'}</span><h2>{match.winReason}</h2><p>Победитель: <b>{match.players[match.winnerIndex]?.username}</b></p></div>}
-      <div className="battle-scoreboard">{match.players.map((player) => <div key={player.index} className={`battle-player ${player.index === match.activePlayer && match.status === 'active' ? 'is-active' : ''}`}><span className="battle-player-mark">{factionMark[player.faction]}</span><div><small>{FACTION_NAMES[player.faction]}</small><b>{player.username}{player.index === match.viewerIndex ? ' · ВЫ' : ''}</b></div><strong>{match.units.filter((unit) => unit.playerIndex === player.index && unit.hp > 0).length} <small>/ 3</small></strong></div>)}</div>
+      <div className="battle-scoreboard">{match.players.map((player) => { const presence = match.playerPresence?.[player.index]; const reconnectLeft = presence?.reconnectDeadlineAt ? Math.max(0, Math.ceil((presence.reconnectDeadlineAt - clockNow) / 1000)) : null; return <div key={player.index} className={`battle-player ${player.index === match.activePlayer && match.status === 'active' ? 'is-active' : ''}`}><span className="battle-player-mark">{factionMark[player.faction]}</span><div><small>{FACTION_NAMES[player.faction]}{match.status === 'active' && <i className={`battle-presence ${presence?.connected === false ? 'is-offline' : ''}`}>{presence?.connected === false ? ` · НЕТ СВЯЗИ${reconnectLeft !== null ? ` · ${reconnectLeft} сек.` : ''}` : ' · НА СВЯЗИ'}</i>}</small><b>{player.username}{player.index === match.viewerIndex ? ' · ВЫ' : ''}</b></div><strong>{match.units.filter((unit) => unit.playerIndex === player.index && unit.hp > 0).length} <small>/ 3</small></strong></div> })}</div>
       <div className="battle-layout">
         <div className="battle-board-wrap"><div className="battle-board" role="grid" aria-label="Тактическая карта 12 на 12 клеток" onClick={(event) => { const cell = event.target.closest('[data-x]'); if (cell) clickCell(Number(cell.dataset.x), Number(cell.dataset.y)) }}>{Array.from({ length: 144 }, (_, index) => {
           const x = index % 12, y = Math.floor(index / 12)
@@ -222,6 +341,7 @@ export default function OnlinePage() {
           {match.status === 'active' && <button className="button button-primary battle-end-turn" type="button" disabled={!isMyTurn || busy} onClick={() => sendAction('end-turn')}>Завершить ход <span>→</span></button>}
           {match.status === 'active' && !confirmSurrender && <button className="button button-surrender" type="button" disabled={busy} onClick={() => setConfirmSurrender(true)}>Сдаться и выйти</button>}
           {match.status === 'active' && confirmSurrender && <section className="battle-surrender-confirm" role="alertdialog" aria-labelledby="surrender-title"><b id="surrender-title">Сдаться и завершить бой?</b><p>Противнику будет засчитана победа. Это действие нельзя отменить.</p><div><button className="button button-surrender-confirm" type="button" disabled={busy} onClick={() => sendAction('surrender')}>{busy ? 'ЗАВЕРШАЮ…' : 'Подтвердить сдачу'}</button><button className="button button-outline" type="button" disabled={busy} onClick={() => setConfirmSurrender(false)}>Продолжить бой</button></div></section>}
+          {match.status === 'finished' && match.roomCode && room?.status === 'finished' && <button className="button button-primary battle-rematch" type="button" disabled={roomBusy} onClick={requestRematch}>{roomBusy ? 'СОХРАНЯЮ…' : room.rematchReady?.[room.viewerId] ? 'Ждём согласия соперника…' : 'Сыграть ещё раз'}</button>}
           {match.status === 'finished' && <div className={`battle-result ${didWin ? 'is-victory' : 'is-defeat'}`}><button type="button" className="button button-outline" onClick={() => { localStorage.removeItem(MATCH_KEY); setMatchId(''); setMatch(null); setMatchError('') }}>Вернуться в узел связи</button></div>}
           {toast && <p className="battle-toast" role="status">{toast}</p>}{matchError && <p className="online-error" role="alert">{matchError}</p>}
           <section className="battle-panel battle-log-panel"><p className="eyebrow">ЖУРНАЛ ОПЕРАЦИИ</p><div className="battle-log" aria-live="polite">{[...match.log].reverse().map((entry) => <p key={entry.id}><small>ХОД {entry.turn}</small>{entry.text}</p>)}</div></section>

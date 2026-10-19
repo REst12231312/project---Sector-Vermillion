@@ -3,7 +3,11 @@ import { loreEntries } from '../data/gameData.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { defectToChaos } from '../services/authService.js'
 import { updateUserOnlineIdentity } from '../storage.js'
-import { cancelQueue, getMatch, performMatchAction, queueForMatch } from '../services/battleService.js'
+import {
+  cancelQueue, createPrivateRoom, getMatch, getPrivateRoom, joinPrivateRoom,
+  leavePrivateRoom, performMatchAction, queueForMatch, readyForRematch,
+  setRoomReady,
+} from '../services/battleService.js'
 import {
   answerQuiz, completeCampaign, discoverEntry, getFactionFragments, recordSignalIntercept,
   getKnowledge, getState, readEntry, recordInterceptedLore, studyFaction,
@@ -34,13 +38,48 @@ router.delete('/online/matchmaking', requireAuth, (req, res) => {
   cancelQueue(req.user.sub)
   res.json({ status: 'cancelled' })
 })
+router.post('/online/rooms', requireAuth, (req, res) => {
+  const result = createPrivateRoom({ id: req.user.sub, username: req.user.username }, req.body?.faction)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.status(201).json(result)
+})
+router.post('/online/rooms/:code/join', requireAuth, (req, res) => {
+  const result = joinPrivateRoom(req.params.code, { id: req.user.sub, username: req.user.username }, req.body?.faction)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.json(result)
+})
+router.get('/online/rooms/:code', requireAuth, (req, res) => {
+  const room = getPrivateRoom(req.params.code, req.user.sub)
+  if (!room) return res.status(404).json({ error: 'Комната не найдена или доступ закрыт.' })
+  res.json({ room })
+})
+router.put('/online/rooms/:code/ready', requireAuth, (req, res) => {
+  const result = setRoomReady(req.params.code, req.user.sub, req.body?.ready)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.json(result)
+})
+router.delete('/online/rooms/:code', requireAuth, (req, res) => {
+  const result = leavePrivateRoom(req.params.code, req.user.sub)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.json(result)
+})
+router.post('/online/rooms/:code/rematch', requireAuth, (req, res) => {
+  const result = readyForRematch(req.params.code, req.user.sub)
+  if (result.error) return res.status(result.statusCode || 400).json({ error: result.error })
+  res.json(result)
+})
 router.get('/online/matches/:matchId', requireAuth, (req, res) => {
   const match = getMatch(req.params.matchId, req.user.sub)
   if (!match) return res.status(404).json({ error: 'Операция не найдена или доступ к ней закрыт.' })
   res.json({ match })
 })
+router.post('/online/matches/:matchId/presence', requireAuth, (req, res) => {
+  const match = getMatch(req.params.matchId, req.user.sub)
+  if (!match) return res.status(404).json({ error: 'Операция не найдена или доступ к ней закрыт.' })
+  res.json({ match })
+})
 router.post('/online/matches/:matchId/actions', requireAuth, (req, res) => {
-  const result = performMatchAction(req.params.matchId, req.user.sub, req.body?.type, req.body?.payload)
+  const result = performMatchAction(req.params.matchId, req.user.sub, req.body?.type, req.body?.payload, req.body?.actionId)
   if (result.error) return res.status(result.status || 400).json({ error: result.error })
   res.json(result)
 })

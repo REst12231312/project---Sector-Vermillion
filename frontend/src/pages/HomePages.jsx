@@ -28,7 +28,6 @@ export default function HomePages() {
   const campaignComplete = !nextLevel
   const chaos = factionId === 'chaos'
   const orks = factionId === 'orks'
-  const tau = factionId === 'tau'
 
   return (
     <main>

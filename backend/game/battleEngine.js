@@ -19,8 +19,8 @@ export const UNIT_TYPES = {
     { type: 'loota', name: 'Лута', hp: 10, toughness: 4, save: 6, ranged: { name: 'Деффган', attacks: 4, skill: 5, strength: 7, ap: -1, damage: 2, range: 4 }, melee: { name: 'Импровизированный тесак', attacks: 2, skill: 4, strength: 4, ap: 0, damage: 1, range: 1 } },
   ],
   tau: [
-    { type: 'fire-warrior', name: 'Огневой воин', hp: 12, toughness: 3, save: 4, ranged: { name: 'Импульсная винтовка', attacks: 2, skill: 4, strength: 5, ap: 0, damage: 1, range: 5 }, melee: { name: 'Фукусная схватка', attacks: 2, skill: 5, strength: 3, ap: 0, damage: 1, range: 1 } },
-    { type: 'crisis-suit', name: 'Кризис-костюм', hp: 15, toughness: 5, save: 3, ranged: { name: 'Импульсный бластер', attacks: 3, skill: 4, strength: 5, ap: -1, damage: 2, range: 4 }, melee: { name: 'Удар сервопривода', attacks: 3, skill: 4, strength: 5, ap: 0, damage: 1, range: 1 } },
+    { type: 'fire-warrior', name: 'Огневой воин', hp: 12, toughness: 3, save: 4, ranged: { name: 'Импульсная винтовка', attacks: 2, skill: 3, strength: 5, ap: 0, damage: 1, range: 5 }, melee: { name: 'Фукусная схватка', attacks: 2, skill: 5, strength: 3, ap: 0, damage: 1, range: 1 } },
+    { type: 'crisis-suit', name: 'Кризис-костюм', hp: 15, toughness: 5, save: 3, ranged: { name: 'Импульсный бластер', attacks: 3, skill: 3, strength: 5, ap: -1, damage: 2, range: 4 }, melee: { name: 'Удар сервопривода', attacks: 3, skill: 4, strength: 5, ap: 0, damage: 1, range: 1 } },
     { type: 'pathfinder', name: 'Следопыт', hp: 9, toughness: 3, save: 5, ranged: { name: 'Рельсовая винтовка', attacks: 1, skill: 3, strength: 8, ap: -2, damage: 3, range: 6 }, melee: { name: 'Боевой нож', attacks: 2, skill: 5, strength: 3, ap: 0, damage: 1, range: 1 } },
   ],
 }
@@ -61,6 +61,7 @@ export function createBattle({ id, players, firstPlayerIndex = 0, topPlayerIndex
       return { id: `${player.index}-${template.type}`, type: template.type, name: template.name, playerIndex: player.index, x, y, hp: template.hp, maxHp: template.hp, toughness: template.toughness, save: template.save, weapons: clone({ ranged: template.ranged, melee: template.melee }), hasMoved: false, hasAttacked: false }
     })),
     obstacles: OBSTACLES.map(([x, y]) => ({ x, y })), cover: COVER.map(([x, y]) => ({ x, y })),
+    stats: { attackActions: 0, damage: 0, destroyedUnits: 0 },
     controlPoints: CONTROL_POINT_CELLS.map(([x, y], index) => ({
       id: `point-${index + 1}`, x: reverseObjectives ? MAP_SIZE - 1 - x : x,
       y: reverseObjectives ? MAP_SIZE - 1 - y : y, ownerIndex: null, capture: null,
@@ -154,6 +155,10 @@ function resolveAttack(match, player, { unitId, targetUnitId, weaponType }, rand
     }
     attacks.push(result)
   }
+  match.stats ||= { attackActions: 0, damage: 0, destroyedUnits: 0 }
+  match.stats.attackActions += 1
+  match.stats.damage += totalDamage
+  if (target.hp === 0) match.stats.destroyedUnits += 1
   if (target.hp === 0) clearCapture(match, target.id)
   const summary = attacks.map(({ hit, wound, save, damage }) => `попадание ${hit}${wound === null ? '' : ` · ранение ${wound}`}${save === null ? '' : ` · спасбросок ${save}`}${damage ? ` · ${damage} урона` : ''}`).join(' / ')
   addLog(match, `${unit.name}: ${weapon.name} → ${target.name} (${totalDamage} урона). ${summary}`)
@@ -195,7 +200,7 @@ function reduceAction(match, player, type, payload, random) {
   if (type === 'move') {
     const { unit } = access
     if (unit.hasMoved) return { error: 'Этот отряд уже перемещался в текущем ходу.', status: 409 }
-    const x = Number(payload.x), y = Number(payload.y)
+    const x = payload.x, y = payload.y
     const error = canMove(match, unit, x, y)
     if (error) return { error }
     clearCapture(match, unit.id)
@@ -268,5 +273,11 @@ export function battleSnapshot(state, viewerId) {
     viewerIndex: viewer?.index ?? null, activePlayer: state.activePlayer, turn: state.turn,
     units: state.units, obstacles: state.obstacles, cover: state.cover, controlPoints: state.controlPoints,
     log: state.log.slice(-30), winnerIndex: state.winnerIndex, winReason: state.winReason,
+    turnDeadlineAt: state.turnDeadlineAt || null,
+    playerPresence: Object.fromEntries(state.players.map((player) => [player.index, {
+      connected: state.playerPresence?.[player.userId]?.connected !== false,
+      reconnectDeadlineAt: state.playerPresence?.[player.userId]?.reconnectDeadlineAt || null,
+    }])),
+    roomCode: state.roomCode || null,
   }
 }

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomBytes } from 'node:crypto'
 
-const dataDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data')
+const dataDirectory = process.env.SECTOR_DATA_DIRECTORY || path.join(path.dirname(fileURLToPath(import.meta.url)), 'data')
 const progressPath = path.join(dataDirectory, 'progress.json')
 const usersPath = path.join(dataDirectory, 'users.json')
 const onlineStatePath = path.join(dataDirectory, 'online-state.json')
@@ -23,7 +23,7 @@ export function saveProgress(profileId, state) {
   writeJson(progressPath, progress)
   return state
 }
-export function readOnlineState() { return readJson(onlineStatePath, { sessions: [], waitingPlayers: [] }) }
+export function readOnlineState() { return readJson(onlineStatePath, { sessions: [], waitingPlayers: [], rooms: [] }) }
 export function saveOnlineState(state) { writeJson(onlineStatePath, state); return state }
 export function readUsers() { return readJson(usersPath, []) }
 export function findUser(username) { return readUsers().find((user) => user.username === username) ?? null }
