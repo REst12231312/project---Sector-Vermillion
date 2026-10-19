@@ -10,7 +10,8 @@ const REFRESH_COOKIE_PATH = '/api/auth'
 function cookieValue(req, name) {
   const raw = req.headers.cookie || ''
   const part = raw.split(';').map((entry) => entry.trim()).find((entry) => entry.startsWith(`${name}=`))
-  return part ? decodeURIComponent(part.slice(name.length + 1)) : ''
+  if (!part) return ''
+  try { return decodeURIComponent(part.slice(name.length + 1)) } catch { return '' }
 }
 
 function setRefreshCookie(res, token) {

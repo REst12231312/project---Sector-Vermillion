@@ -1,5 +1,6 @@
 .account-settings,.online-battle-record{max-width:850px;margin-top:24px;padding:23px;border:1px solid var(--line);background:linear-gradient(135deg,#191b18,#151714)}
 .account-settings .section-heading,.online-battle-record .section-heading{margin-bottom:15px}
+.account-email{display:flex;gap:12px;margin:0 0 15px;color:var(--ink);font:12px var(--mono)}.account-email span{color:var(--muted);font-size:9px;letter-spacing:1px}
 .account-settings .section-heading h2,.online-battle-record .section-heading h2{margin:0;font:600 25px var(--display);text-transform:uppercase}
 .account-settings-form,.account-password-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .account-settings-form>label,.account-password-form>label{display:grid;gap:7px;color:var(--muted);font:10px var(--mono);letter-spacing:1px}
@@ -16,6 +17,7 @@
 .account-password-form h3{grid-column:1/-1;margin:0;color:var(--ink);font:600 17px var(--display);text-transform:uppercase}
 .account-password-form>.button{align-self:end;justify-self:start}
 .account-settings>.online-error,.account-settings>.online-notice{margin:14px 0 0}
+.account-settings>.online-error{color:#e3a28d;font-size:12px;line-height:1.55}.account-settings>.online-notice{padding:11px 13px;border:1px solid #667b48;background:#20291a;color:#c4d89a;font-size:12px;line-height:1.5}
 .online-battle-record .battle-record-stats{grid-template-columns:repeat(5,minmax(0,1fr));max-width:none;margin:0}
 .online-battle-record .battle-record-stats article{padding:15px}
 .online-battle-record .battle-record-stats article>b{font-size:27px}

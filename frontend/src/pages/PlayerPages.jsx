@@ -43,6 +43,7 @@ function AccountSettings({ user, onUser }) {
 
   return <section className="account-settings">
     <div className="section-heading"><div><p className="eyebrow">АККАУНТ · НАСТРОЙКИ</p><h2>Личные данные</h2></div></div>
+    <p className="account-email"><span>EMAIL</span>{user?.email || 'Не указан'}</p>
     <form className="account-settings-form" onSubmit={saveProfile}>
       <label>ПОЗЫВНОЙ<input value={username} onChange={(event) => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" required /></label>
       <label>ЛЮБИМАЯ ФРАКЦИЯ<select value={favoriteFaction} onChange={(event) => setFavoriteFaction(event.target.value)}>{Object.entries(FACTION_NAMES).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>

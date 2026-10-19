@@ -5,6 +5,8 @@ import { apiRequest, getCurrentUser, isAuthenticated, logout } from '../utils/ap
 import { FACTION_DETAILS } from '../utils/gameProgress'
 import SignalIntercept from './SignalIntercept'
 
+const avatarMarks = { imperium: 'I', chaos: '⛧', orks: 'W', tau: 'T', skull: '☠', eagle: '✦', star: '✧', default: '◈' }
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -36,7 +38,7 @@ export default function MainLayout() {
       <nav className="main-nav" aria-label="Основная навигация">
         <NavLink to="/" end>Главная</NavLink><NavLink to="/factions">{faction.shortName}</NavLink><NavLink to="/campaign">Кампания</NavLink><NavLink to={faction.archivePath}>Досье</NavLink><NavLink to="/profile">Архив игрока</NavLink>
       </nav>
-      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={async () => { await logout(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
+      <div className="header-account">{authenticated ? <><NavLink to="/profile" className="player-chip"><span className="player-avatar">{avatarMarks[user?.avatarId] || user?.username?.[0]?.toUpperCase() || 'A'}</span><span><small>{user?.username || 'АКОЛИТ'}</small><b>{xp} XP</b></span><span className="chip-arrow">↗</span></NavLink><button className="logout-button" onClick={async () => { await logout(); navigate('/', { replace: true }) }}>ВЫЙТИ</button></> : <><NavLink to="/login" className="text-link">Войти</NavLink><Link to="/register" className="button button-primary">Вступить в ряды</Link></>}</div>
     </header>
     <Outlet />
     {studyingLore && <SignalIntercept />}

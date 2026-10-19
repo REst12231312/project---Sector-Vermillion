@@ -52,7 +52,8 @@ function attackValue(state, attack) {
   const orkMobBonus = player.faction === 'orks' && attack.weaponType === 'melee' && state.units.some((ally) => ally.id !== attacker.id && ally.hp > 0 && ally.playerIndex === attacker.playerIndex && Math.max(Math.abs(ally.x - attacker.x), Math.abs(ally.y - attacker.y)) === 1) ? 1 : 0
   const chaosWoundedBonus = player.faction === 'chaos' && attack.weaponType === 'melee' && attacker.hp <= attacker.maxHp / 2 ? 1 : 0
   const strength = weapon.strength + (abilityUsed && player.faction === 'chaos' ? 1 : 0) + chaosWoundedBonus
-  const hitSkill = Math.max(2, weapon.skill - (abilityUsed && player.faction === 'tau' ? 1 : 0))
+  const tauStationaryBonus = player.faction === 'tau' && attack.weaponType === 'ranged' && !attacker.hasMoved && attacker.type !== 'crisis-suit' ? 1 : 0
+  const hitSkill = Math.max(2, weapon.skill - tauStationaryBonus - (abilityUsed && player.faction === 'tau' ? 1 : 0))
   const hitChance = Math.max(0, 7 - hitSkill) / 6
   const woundChance = (7 - calculateWoundTarget(strength, target.toughness)) / 6
   const cover = state.cover.some((cell) => cell.x === target.x && cell.y === target.y)

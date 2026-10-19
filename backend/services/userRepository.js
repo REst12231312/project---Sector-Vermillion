@@ -19,7 +19,7 @@ async function collections() {
   if (!uri) return null
   if (!clientPromise) {
     const client = new MongoClient(uri, { appName: 'SectorVermillion', serverSelectionTimeoutMS: 5000 })
-    clientPromise = client.connect()
+    clientPromise = client.connect().catch((error) => { clientPromise = null; indexPromise = null; throw error })
   }
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB || undefined)
@@ -37,11 +37,11 @@ async function collections() {
       await db.collection('users').insertMany(legacyUsers.map((user) => ({
         ...user, favoriteFaction: user.favoriteFaction || user.faction || 'imperium', avatarId: user.avatarId || 'default',
       })), { ordered: false })
-      const legacyHistory = legacyUsers.flatMap((user) => user.matchHistory || [])
+      const legacyHistory = [...readMatchHistoryRecords(), ...legacyUsers.flatMap((user) => user.matchHistory || [])]
       if (legacyHistory.length) await db.collection('matchHistory').bulkWrite(legacyHistory.map((entry) => ({
         updateOne: { filter: { matchId: entry.matchId }, update: { $setOnInsert: entry }, upsert: true },
       })), { ordered: false })
-    })
+    }).catch((error) => { indexPromise = null; throw error })
   }
   await indexPromise
   return { users: db.collection('users'), matchHistory: db.collection('matchHistory') }
@@ -183,7 +183,8 @@ export async function recordMatchHistory(match) {
     }
     return entry
   }
-  await db.matchHistory.updateOne({ matchId: entry.matchId }, { $setOnInsert: entry }, { upsert: true })
+  try { await db.matchHistory.updateOne({ matchId: entry.matchId }, { $setOnInsert: entry }, { upsert: true }) }
+  catch (error) { if (error?.code !== 11000) throw error }
   return entry
 }
 
@@ -213,7 +214,7 @@ export async function getMatchStats(userId) {
     const matches = summaryRows[0]?.matches || 0, wins = summaryRows[0]?.wins || 0
     return { matches, wins, losses: matches - wins, winRate: matches ? Math.round((wins / matches) * 100) : 0, favoriteFaction: factionRows[0]?._id || null }
   }
-  const history = await getMatchHistory(userId, { limit: 10000 })
+  const history = readMatchHistoryRecords().filter((match) => match.participants.some((participant) => participant.userId === userId))
   const wins = history.filter((match) => match.winnerUserId === userId).length
   const losses = history.length - wins
   const factionCounts = new Map()

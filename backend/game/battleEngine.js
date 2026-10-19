@@ -20,7 +20,7 @@ export const UNIT_TYPES = {
   ],
   tau: [
     { type: 'fire-warrior', name: 'Огневой воин', hp: 12, toughness: 3, save: 4, ranged: { name: 'Импульсная винтовка', attacks: 2, skill: 3, strength: 5, ap: 0, damage: 1, range: 5 }, melee: { name: 'Фукусная схватка', attacks: 2, skill: 5, strength: 3, ap: 0, damage: 1, range: 1 } },
-    { type: 'crisis-suit', name: 'Кризис-костюм', hp: 15, toughness: 5, save: 3, ranged: { name: 'Импульсный бластер', attacks: 3, skill: 3, strength: 5, ap: -1, damage: 2, range: 4 }, melee: { name: 'Удар сервопривода', attacks: 3, skill: 4, strength: 5, ap: 0, damage: 1, range: 1 } },
+    { type: 'crisis-suit', name: 'Кризис-костюм', hp: 16, toughness: 5, save: 2, ranged: { name: 'Импульсный бластер', attacks: 3, skill: 3, strength: 5, ap: -1, damage: 2, range: 4 }, melee: { name: 'Удар сервопривода', attacks: 3, skill: 4, strength: 5, ap: 0, damage: 1, range: 1 } },
     { type: 'pathfinder', name: 'Следопыт', hp: 9, toughness: 3, save: 5, ranged: { name: 'Рельсовая винтовка', attacks: 1, skill: 3, strength: 8, ap: -2, damage: 3, range: 6 }, melee: { name: 'Боевой нож', attacks: 2, skill: 5, strength: 3, ap: 0, damage: 1, range: 1 } },
   ],
 }
@@ -30,7 +30,7 @@ const DEFAULT_COVER = [[2, 4], [3, 7], [8, 4], [9, 7], [5, 6], [6, 5]]
 const DEFAULT_CONTROL_POINTS = [[2, 5], [6, 6], [9, 5]]
 export const MAPS = [
   { id: 'sector-crossing', name: 'Перекрёсток Сектора', obstacles: DEFAULT_OBSTACLES, cover: DEFAULT_COVER, controlPoints: DEFAULT_CONTROL_POINTS },
-  { id: 'rust-cathedral', name: 'Ржавая Кафедра', obstacles: [[2, 2], [9, 2], [2, 9], [9, 9], [4, 4], [7, 4], [4, 7], [7, 7], [6, 3], [5, 8], [3, 5], [8, 5], [3, 6], [8, 6]], cover: [[1, 4], [10, 7], [1, 7], [10, 4], [4, 2], [7, 9], [4, 9], [7, 2], [6, 5], [5, 6]], controlPoints: DEFAULT_CONTROL_POINTS },
+  { id: 'rust-cathedral', name: 'Ржавая Кафедра', obstacles: [[2, 2], [9, 2], [2, 9], [9, 9], [4, 4], [7, 4], [4, 7], [7, 7], [6, 3], [5, 8]], cover: [[1, 4], [10, 7], [1, 7], [10, 4], [4, 2], [7, 9], [4, 9], [7, 2], [6, 5], [5, 6]], controlPoints: DEFAULT_CONTROL_POINTS },
   { id: 'ash-wastes', name: 'Пепельные Пустоши', obstacles: [[3, 2], [8, 2], [3, 9], [8, 9], [5, 3], [6, 3], [5, 8], [6, 8], [2, 7], [9, 4], [2, 4], [9, 7]], cover: [[2, 3], [9, 8], [2, 8], [9, 3], [4, 5], [7, 6], [4, 6], [7, 5], [5, 5], [6, 6]], controlPoints: DEFAULT_CONTROL_POINTS },
 ]
 export const OBSTACLES = DEFAULT_OBSTACLES
@@ -40,7 +40,7 @@ export const FACTION_ABILITIES = {
   imperium: { name: 'Тактическая дисциплина', description: 'Один раз за матч перебрось один промах в атаке.', passive: 'На своей контрольной точке отряды получают укрытие от стрельбы.' },
   chaos: { name: 'Благословение варпа', description: 'Один раз за матч получи +1 к силе оружия в атаке.', passive: 'Раненые отряды Хаоса получают +1 к силе ближнего боя.' },
   orks: { name: 'Дави их!', description: 'Один раз за матч добавь 2 атаки в ближнем бою.', passive: 'Сражаясь рядом с союзником, орки получают +1 атаку в ближнем бою.' },
-  tau: { name: 'Метка цели', description: 'Один раз за матч улучши стрельбу на 1 и игнорируй укрытие.', passive: 'Неподвижные стрелки Тау получают +1 к дальности оружия.' },
+  tau: { name: 'Метка цели', description: 'Один раз за матч улучши стрельбу и игнорируй укрытие.', passive: 'Неподвижные Огневые воины и Следопыты получают +1 к дальности и попаданию.' },
 }
 const clone = (value) => JSON.parse(JSON.stringify(value))
 export const distance = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))
@@ -170,6 +170,7 @@ function resolveAttack(match, player, { unitId, targetUnitId, weaponType, useAbi
   const chaosWoundedBonus = player.faction === 'chaos' && weaponType === 'melee' && unit.hp <= unit.maxHp / 2 ? 1 : 0
   const strengthBonus = (useAbility && player.faction === 'chaos' ? 1 : 0) + chaosWoundedBonus
   const tauMark = useAbility && player.faction === 'tau' && weaponType === 'ranged'
+  const tauStationaryBonus = player.faction === 'tau' && weaponType === 'ranged' && !unit.hasMoved && unit.type !== 'crisis-suit' ? 1 : 0
   let imperiumRerollAvailable = useAbility && player.faction === 'imperium'
   for (let index = 0; index < attackCount; index += 1) {
     let hit = rollD6(random)
@@ -181,7 +182,7 @@ function resolveAttack(match, player, { unitId, targetUnitId, weaponType, useAbi
       result.hit = hit
       imperiumRerollAvailable = false
     }
-    const requiredHit = Math.max(2, weapon.skill - (tauMark ? 1 : 0))
+    const requiredHit = Math.max(2, weapon.skill - tauStationaryBonus - (tauMark ? 1 : 0))
     if (hit >= requiredHit && hit !== 1) {
       const wound = rollD6(random); result.wound = wound
       if (wound >= calculateWoundTarget(weapon.strength + strengthBonus, target.toughness) && wound !== 1) {

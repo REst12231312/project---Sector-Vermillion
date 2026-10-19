@@ -78,7 +78,7 @@ export async function login({ username: rawUsername, email: rawEmail, identifier
     const passwordHash = (await scrypt(password, user.salt, 64)).toString('hex')
     const expected = Buffer.from(user.passwordHash || '', 'hex'), provided = Buffer.from(passwordHash, 'hex')
     valid = expected.length === provided.length && timingSafeEqual(expected, provided)
-    if (valid) await savePasswordHash(user.id, await bcrypt.hash(password, passwordHashRounds))
+    if (valid && !bcrypt.truncates(password)) await savePasswordHash(user.id, await bcrypt.hash(password, passwordHashRounds))
   }
   if (!valid) return { status: 401, error: 'Неверный позывной, email или пароль.' }
   return { status: 200, ...(await createSession(user)) }

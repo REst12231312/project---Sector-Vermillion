@@ -184,6 +184,13 @@ const discipline = run(state, 'imperium', 'attack', { unitId: '0-tactical', targ
 assert.equal(discipline.attack.attacks[0].originalHit, 1)
 assert.equal(discipline.attack.attacks[0].hitReroll, 6)
 assert.equal(discipline.state.players[0].factionAbilityUsed, true)
+state = battle('imperium-one-reroll')
+const rerollTarget = state.units.find((unit) => unit.id === '1-boy')
+rerollTarget.x = 2; rerollTarget.y = 3
+const singleReroll = run(state, 'imperium', 'attack', { unitId: '0-tactical', targetUnitId: rerollTarget.id, weaponType: 'ranged', useAbility: true }, [0, 0, 0])
+assert.equal(singleReroll.attack.attacks[0].hitReroll, 1)
+assert.equal(singleReroll.attack.attacks[1].hit, 1)
+assert.equal(singleReroll.attack.attacks[1].hitReroll, undefined, 'Imperial discipline rerolls no more than one miss in an attack action')
 
 const chaosPlayers = [players[0], { userId: 'chaos-player', username: 'Chaos', faction: 'chaos' }]
 state = createBattle({ id: 'chaos-ability', players: chaosPlayers, firstPlayerIndex: 1, now: 1 })
@@ -200,6 +207,9 @@ const orkBoy = state.units.find((unit) => unit.id === '1-boy')
 const orkAlly = state.units.find((unit) => unit.id === '1-nob')
 const orkTarget = state.units.find((unit) => unit.id === '0-tactical')
 orkBoy.x = 3; orkBoy.y = 3; orkAlly.x = 3; orkAlly.y = 4; orkTarget.x = 4; orkTarget.y = 3
+const invalidWaagh = run(state, 'orks', 'attack', { unitId: orkBoy.id, targetUnitId: orkTarget.id, weaponType: 'ranged', useAbility: true })
+assert.match(invalidWaagh.error, /только в ближнем бою/)
+assert.equal(state.players[1].factionAbilityUsed, false, 'an invalid ability request must not consume the match use')
 const waagh = run(state, 'orks', 'attack', { unitId: orkBoy.id, targetUnitId: orkTarget.id, weaponType: 'melee', useAbility: true }, [])
 assert.equal(waagh.attack.attacks.length, 7, 'Ork mob passive and Waaagh ability add three melee attacks')
 assert.equal(waagh.state.players[1].factionAbilityUsed, true)
@@ -212,7 +222,7 @@ const tauTarget = state.units.find((unit) => unit.id === '0-tactical')
 tauShooter.x = 2; tauShooter.y = 0; tauTarget.x = 2; tauTarget.y = 4
 tauTarget.save = 3
 const marker = run(state, 'tau-player', 'attack', { unitId: tauShooter.id, targetUnitId: tauTarget.id, weaponType: 'ranged', useAbility: true }, [1 / 6, 3 / 6, 1 / 6])
-assert.equal(marker.attack.attacks[0].hit, 2, 'the T’au ability improves the hit target by one')
+assert.equal(marker.attack.attacks[0].hit, 2, 'the T’au stationary passive and marker ability improve ranged accuracy')
 assert.equal(marker.attack.attacks[0].save, 2)
 assert.equal(marker.attack.attacks[0].damage, 1, 'the T’au marker ignores target cover')
 assert.equal(marker.state.players[1].factionAbilityUsed, true)
@@ -224,5 +234,8 @@ pathfinder.x = 1; pathfinder.y = 1; farTarget.x = 8; farTarget.y = 1
 state.units.find((unit) => unit.id === '0-terminator').x = 0; state.units.find((unit) => unit.id === '0-terminator').y = 6
 state.units.find((unit) => unit.id === '0-scout').x = 11; state.units.find((unit) => unit.id === '0-scout').y = 6
 assert(availableAttacks(state, 'tau-player', pathfinder.id).some((entry) => entry.targetUnitId === farTarget.id), 'stationary T’au receive one extra tile of range')
+const tauPassiveShot = run(state, 'tau-player', 'attack', { unitId: pathfinder.id, targetUnitId: farTarget.id, weaponType: 'ranged' }, [1 / 6, 0.5, 0.5])
+assert.equal(tauPassiveShot.attack.attacks[0].wound, 4, 'stationary Tau infantry improve hit rolls without spending the active ability')
+assert.equal(tauPassiveShot.state.players[1].factionAbilityUsed, false)
 
-console.log('Боевой движок: проверены четыре фракции, смешанные составы и правила хода, атаки, захвата и сдачи.')
+console.log('Боевой движок: проверены четыре фракции, три карты, активные способности, пассивные свойства, ходы, атаки, захват и сдача.')
