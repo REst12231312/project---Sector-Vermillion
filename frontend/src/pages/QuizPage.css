@@ -48,3 +48,6 @@
 .campaign-online-stop .campaign-map-point b{font-size:15px}.campaign-online-stop .campaign-map-card{border-color:#8b7047;background:linear-gradient(135deg,rgba(47,39,27,.97),rgba(21,22,19,.98))}.campaign-online-stop .campaign-map-card-top span:last-child{color:#d9af61}.campaign-online-stop .campaign-map-card-bottom .button{white-space:nowrap}@media(max-width:600px){.campaign-online-stop .campaign-map-card-bottom .button{align-self:flex-start}}
 
 .campaign-level.level-intercepted{border-color:#85624a;background:linear-gradient(110deg,rgba(129,71,46,.16),#171815)}.level-intercepted .campaign-level-index{border-color:#9e6749;color:#df9a6b}.level-intercepted .campaign-level-copy>.eyebrow{color:#d19068}
+
+.campaign-map-card-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 45%;opacity:.42;pointer-events:none;mask-image:linear-gradient(90deg,transparent 0%,#000 38%,#000 78%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 38%,#000 78%,transparent 100%)}
+.campaign-map-card>*:not(.campaign-map-card-art){position:relative;z-index:1}

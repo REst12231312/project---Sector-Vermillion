@@ -12,6 +12,25 @@ import './TauTheme.css'
 const freshMeters = () => ({ supplies: 2, unity: 1, intel: 1 })
 const meterNames = { supplies: 'Снабжение', unity: 'Поддержка', intel: 'Разведданные' }
 const effectsFor = (effect) => Object.entries(effect).map(([key, value]) => `${value > 0 ? '+' : ''}${value} ${meterNames[key].toLowerCase()}`).join(' · ')
+const imperiumCampaignArtwork = {
+  '01': '01_Pepel_Terry.svg',
+  '02': '02_Za_predelami_Terry.svg',
+  '03': '03_Poteryannye_synovya.svg',
+  '04': '04_Signal_s_Isstvana_III.svg',
+  '05': '05_Pepel_Isstvana_V.svg',
+  '06': '06_Bitva_za_Kalt.svg',
+  '07': '07_Poslednyaya_oborona_Terry.svg',
+  '08': '08_Imperium_posle_Eresi.svg',
+}
+const chaosCampaignArtwork = {
+  '01': '01_Shepot_za_granyu.svg',
+  '02': '02_Yad_na_Davine.svg',
+  '03': '03_Pepel_Isstvana.svg',
+  '04': '04_Razrushit_Kalt.svg',
+  '05': '05_Posledniy_put_k_Terre.svg',
+  '06': '06_Bitva_za_Lunu.svg',
+  '07': '07_Izgnanie_v_Oko_Uzhasa.svg',
+}
 const campaignAwards = {
   'imperium-origin': { id: 'campaign-imperium-origin', icon: 'I', name: 'Объединитель Терры', description: 'Операция «Объединение Терры» завершена.' },
   'great-crusade': { id: 'campaign-great-crusade', icon: 'II', name: 'Навигатор Великого похода', description: 'Операция Великого крестового похода завершена.' },
@@ -210,6 +229,8 @@ export default function QuizPage() {
         return <article className={`campaign-map-stop map-side-${index % 2 ? 'right' : 'left'} map-stop-${status}`} key={item.id}>
           <span className="campaign-map-point" aria-hidden="true"><b>{done ? '✓' : item.number}</b></span>
           <div className="campaign-map-card">
+            {faction === 'imperium' && <img className="campaign-map-card-art" src={`/images/campaign/imperium_svg/${imperiumCampaignArtwork[item.number]}`} alt="" aria-hidden="true" loading="lazy" />}
+            {faction === 'chaos' && <img className="campaign-map-card-art" src={`/images/campaign/chaos_svg/${chaosCampaignArtwork[item.number]}`} alt="" aria-hidden="true" loading="lazy" />}
             <div className="campaign-map-card-top"><span>ОПЕРАЦИЯ {item.number}</span><span>{done ? 'ВЫПОЛНЕНА' : canStart ? 'СИГНАЛ ОБНАРУЖЕН' : 'НЕТ ДОСТУПА'}</span></div>
             <span className="campaign-map-location">{item.subtitle}</span>
             <h2>{item.title}</h2>
