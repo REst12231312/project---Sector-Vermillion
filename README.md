@@ -11,30 +11,13 @@
 - `backend/storage.js` — JSON-хранилище прогресса и локальный режим без MongoDB.
 - `backend/data/gameData.js` — игровые справочники; сохранения, пользователи, состояние онлайн-операций и ключ авторизации хранятся отдельно в той же папке и не добавляются в Git.
 
-## Запуск в Windows PowerShell
+## Запуск в Windows
 
-Установи зависимости один раз:
+Запусти `Управление проектом GitHub.exe`. Это отдельное Windows-приложение с кнопками запуска и остановки сайта и API, обновления зависимостей, отправки изменений в GitHub и открытия сайта на `http://localhost:3000`.
 
-```powershell
-cd frontend
-npm install
-cd ..\backend
-npm install
-```
+Для обновления зависимостей сначала останови сайт и API, затем нажми «Обновить зависимости». Пакеты установятся по lock-файлам backend и frontend. Кнопка GitHub покажет список изменений, запросит сообщение коммита и подтвердит отправку в текущую ветку. Исходный код приложения — `ProjectManager.cs`.
 
-Затем запусти API и сайт в отдельных окнах PowerShell:
-
-```powershell
-cd backend
-npm run dev
-```
-
-```powershell
-cd frontend
-npm start
-```
-
-Интерфейс откроется на `http://localhost:3000`, API — на `http://localhost:4000`. Игровые записи API сохраняет в `backend/data/progress.json`.
+Нужен Node.js 18 или новее. Сайт работает на порту `3000`, API — на `4000`. Игровые записи API сохраняет в `backend/data/progress.json`.
 
 ### Аккаунты и MongoDB
 
