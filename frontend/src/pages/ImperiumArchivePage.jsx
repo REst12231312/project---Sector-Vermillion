@@ -34,7 +34,9 @@ const archiveArt = {
   tau: {
     'tau-first-sphere': '01_Pervye_sfery.svg', 'tau-damocles': '02_Granitsa_Damokla.svg',
     'tau-arkunasha': '03_Arkunasha.svg', 'tau-farsight-enclaves': '04_Raskol_OShovaha.svg',
-    'tau-fourth-sphere': '05_Chetvertaya_sfera.svg', 'tau-fifth-sphere': '06_Pyataya_sfera.svg',
+    'tau-agrellan': '05_Vtoraya_kampaniya_na_Aggrellane.svg',
+    'tau-fourth-sphere': '06_Chetvertaya_sfera.svg', 'tau-fifth-sphere': '07_Pyataya_sfera.svg',
+    'tau-chalnath': '08_Vozvrashchenie_na_Vedik.svg', 'tau-cao-quo': '09_Vosstanie_na_Tsao_Kuo.svg',
   },
 }
 
