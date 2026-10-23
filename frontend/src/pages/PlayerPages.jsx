@@ -70,26 +70,36 @@ const campaignAwards = [
 const chaosAwards = [
   { id: 'campaign-chaos-whispers', icon: 'I', name: 'Глас из варпа', description: 'Заверши операцию по вербовке тайного культа.' },
   { id: 'campaign-davin-fall', icon: 'II', name: 'Путь Воителя', description: 'Заверши операцию на Давине.' },
-  { id: 'campaign-istvaan-betrayal', icon: 'III', name: 'Пепел Исствана', description: 'Заверши операцию предательства.' },
-  { id: 'campaign-chaos-calth', icon: 'IV', name: 'Пепел Калта', description: 'Заверши атаку Несущих Слово на Ультрамар.' },
-  { id: 'campaign-siege-terra', icon: 'V', name: 'Осада Терры', description: 'Доведи кампанию Хаоса до осады дворца.' },
-  { id: 'campaign-battle-luna', icon: 'VI', name: 'Побег из Сола', description: 'Выведи часть сил из Солнечной системы.' },
-  { id: 'campaign-eye-retreat', icon: 'VII', name: 'Путь в Око', description: 'Приведи уцелевших к убежищу в Варпе.' },
+  { id: 'campaign-signus-prime', icon: 'III', name: 'Ловушка на Сигнусе', description: 'Заверши попытку Хоруса склонить Сангвиния к Хаосу.' },
+  { id: 'campaign-istvaan-betrayal', icon: 'IV', name: 'Пепел Исствана', description: 'Заверши операцию предательства.' },
+  { id: 'campaign-chaos-calth', icon: 'V', name: 'Пепел Калта', description: 'Заверши атаку Несущих Слово на Ультрамар.' },
+  { id: 'campaign-shadow-crusade', icon: 'VI', name: 'Теневой крестовый поход', description: 'Помоги Лоргару и Ангрону прорваться в Ультрамар.' },
+  { id: 'campaign-molech-campaign', icon: 'VII', name: 'Врата Молеха', description: 'Помоги Хорусу получить силу Варпа.' },
+  { id: 'campaign-beta-garmon-chaos', icon: 'VIII', name: 'Пролом у Бета-Гармона', description: 'Расчисти путь предательским силам к Терре.' },
+  { id: 'campaign-siege-terra', icon: 'IX', name: 'Осада Терры', description: 'Доведи кампанию Хаоса до осады дворца.' },
+  { id: 'campaign-battle-luna', icon: 'X', name: 'Побег из Сола', description: 'Выведи часть сил из Солнечной системы.' },
+  { id: 'campaign-eye-retreat', icon: 'XI', name: 'Путь в Око', description: 'Приведи уцелевших к убежищу в Варпе.' },
 ]
 const orkAwards = [
   { id: 'campaign-orks-gathering', icon: 'I', name: 'Зов Waaagh!', description: 'Собери первую орду.' },
   { id: 'campaign-orks-ullanor-gates', icon: 'II', name: 'Врата Улланора', description: 'Проведи орду к крепости Урлакка Урга.' },
   { id: 'campaign-orks-ullanor-battle', icon: 'III', name: 'Последний бой Урлакка Урга', description: 'Пройди каноническую битву на Улланоре.' },
-  { id: 'campaign-orks-scattered-warband', icon: 'IV', name: 'Орда снова собирается', description: 'Объедини банду в 41-м тысячелетии.' },
-  { id: 'campaign-orks-armageddon', icon: 'V', name: 'Зелёный прилив', description: 'Заверши кампанию Армагеддона.' },
+  { id: 'campaign-orks-beast-arises', icon: 'IV', name: 'Восстание Зверя', description: 'Проведи орду через Империум во времена Зверя.' },
+  { id: 'campaign-orks-scattered-warband', icon: 'V', name: 'Орда снова собирается', description: 'Объедини банду в 41-м тысячелетии.' },
+  { id: 'campaign-orks-armageddon', icon: 'VI', name: 'Зелёный прилив', description: 'Заверши кампанию Армагеддона.' },
+  { id: 'campaign-orks-octarius', icon: 'VII', name: 'Бойня Октариуса', description: 'Сражайся против флота-улья Левиафан.' },
+  { id: 'campaign-orks-krongar', icon: 'VIII', name: 'Десять дней на Кронгаре', description: 'Помоги Газкуллу пережить дуэль.' },
 ]
 const tauAwards = [
   { id: 'campaign-tau-first-sphere', icon: 'I', name: 'Общее предназначение', description: 'Подготовь первые экспедиции Империи Тау.' },
   { id: 'campaign-tau-damocles', icon: 'II', name: 'Рубеж Дамокла', description: 'Переживи Крестовый поход Дамокла.' },
   { id: 'campaign-tau-arkunasha', icon: 'III', name: 'Щит Аркунаши', description: 'Удержи орочий натиск вместе с Фарсайтом.' },
   { id: 'campaign-tau-farsight-enclaves', icon: 'IV', name: 'Красный исход', description: 'Сопроводи Фарсайта в изгнание.' },
-  { id: 'campaign-tau-fourth-sphere', icon: 'V', name: 'Возвращение Четвёртой', description: 'Собери экспедицию после варп-катастрофы.' },
-  { id: 'campaign-tau-fifth-sphere', icon: 'VI', name: 'Новая сфера', description: 'Поддержи экспансию Шэдоусан.' },
+  { id: 'campaign-tau-agrellan', icon: 'V', name: 'Вторая кампания на Аггреллане', description: 'Удержи мир во время имперской блокады.' },
+  { id: 'campaign-tau-fourth-sphere', icon: 'VI', name: 'Возвращение Четвёртой', description: 'Собери экспедицию после варп-катастрофы.' },
+  { id: 'campaign-tau-fifth-sphere', icon: 'VII', name: 'Новая сфера', description: 'Поддержи экспансию Шэдоусан.' },
+  { id: 'campaign-tau-chalnath', icon: 'VIII', name: 'Возвращение на Ведик', description: 'Подготовь новое наступление в системе Ведик.' },
+  { id: 'campaign-tau-cao-quo', icon: 'IX', name: 'Восстание на Цао Куо', description: 'Разберись с восстанием на новом мире Тау.' },
 ]
 const commonAwards = {
   imperium: [

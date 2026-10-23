@@ -1,9 +1,9 @@
 export const factionIds = ['imperium', 'chaos', 'orks', 'tau']
 export const campaignLevelIds = {
-  imperium: ['imperium-origin', 'great-crusade', 'primarchs', 'istvaan-iii-warning', 'istvaan-v', 'imperium-calth', 'siege-terra-loyalist', 'scouring-aftermath'],
-  chaos: ['chaos-whispers', 'davin-fall', 'istvaan-betrayal', 'chaos-calth', 'siege-terra', 'battle-luna', 'eye-retreat'],
-  orks: ['orks-gathering', 'orks-ullanor-gates', 'orks-ullanor-battle', 'orks-scattered-warband', 'orks-armageddon'],
-  tau: ['tau-first-sphere', 'tau-damocles', 'tau-arkunasha', 'tau-farsight-enclaves', 'tau-fourth-sphere', 'tau-fifth-sphere'],
+  imperium: ['imperium-origin', 'great-crusade', 'primarchs', 'imperium-davin', 'prospero-censure', 'mars-schism', 'istvaan-iii-warning', 'istvaan-v', 'imperium-calth', 'beta-garmon', 'siege-terra-loyalist', 'scouring-aftermath'],
+  chaos: ['chaos-whispers', 'davin-fall', 'signus-prime', 'istvaan-betrayal', 'chaos-calth', 'shadow-crusade', 'molech-campaign', 'beta-garmon-chaos', 'siege-terra', 'battle-luna', 'eye-retreat'],
+  orks: ['orks-gathering', 'orks-ullanor-gates', 'orks-ullanor-battle', 'orks-beast-arises', 'orks-scattered-warband', 'orks-armageddon', 'orks-octarius', 'orks-krongar'],
+  tau: ['tau-first-sphere', 'tau-damocles', 'tau-arkunasha', 'tau-farsight-enclaves', 'tau-agrellan', 'tau-fourth-sphere', 'tau-fifth-sphere', 'tau-chalnath', 'tau-cao-quo'],
 }
 export const quizAnswers = { 'sector-1': 0, 'sector-2': 0, 'sector-3': 1, 'sector-4': 2 }
 const factionFragments = {

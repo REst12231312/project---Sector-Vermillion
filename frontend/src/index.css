@@ -35,3 +35,5 @@
 @media(prefers-reduced-motion:reduce){.achievement-group>.achievement-reveal,.achievement-group-toggle{transition:none}.achievement-group.is-expanded .achievement-card,.signal-record-body.signal-decrypting,.signal-record-body.signal-decrypting:before{animation:none;opacity:1;filter:none;clip-path:none}.decrypt-glyph{color:inherit;text-shadow:none}}
 
 .hero h1{font-size:clamp(42px,5.5vw,68px)}
+
+.site-header{position:sticky;top:0;z-index:1000;background:rgba(14,15,17,.96);backdrop-filter:blur(8px)}

@@ -1,0 +1,158 @@
+.campaign-galaxy{--galaxy-gold:#c5a46d;--galaxy-muted:#89877f;--galaxy-ink:#e5dfd2;--galaxy-line:#36332b;--galaxy-arm-1:#927747;--galaxy-arm-2:#735b34;--galaxy-arm-3:#a17f45;--galaxy-accent:#c5a46d;--galaxy-light:#eee1c3;--galaxy-stars:#dfc98e;--galaxy-world:#c5a05a;--galaxy-complete:#d1bf84;position:relative;left:50%;width:min(calc(100vw - 64px),1600px);max-width:1600px;margin:30px 0 0;padding:22px;transform:translateX(-50%);border:1px solid #39352c;background:#10110f;color:var(--galaxy-ink)}
+.campaign-galaxy.faction-chaos{--galaxy-gold:#a45e54;--galaxy-arm-1:#754743;--galaxy-arm-2:#573635;--galaxy-arm-3:#91564b;--galaxy-accent:#b56b5c;--galaxy-light:#e3a08b;--galaxy-stars:#d4a297;--galaxy-world:#a45e54;--galaxy-complete:#d29a78}
+.campaign-galaxy.faction-orks{--galaxy-gold:#849756;--galaxy-arm-1:#58633c;--galaxy-arm-2:#424a30;--galaxy-arm-3:#768044;--galaxy-accent:#9cae63;--galaxy-light:#d2dc9d;--galaxy-stars:#c4cc93;--galaxy-world:#a0aa58;--galaxy-complete:#c1d084}
+.campaign-galaxy.faction-tau{--galaxy-gold:#6d9fb2;--galaxy-arm-1:#3e6876;--galaxy-arm-2:#2e4e5b;--galaxy-arm-3:#54899a;--galaxy-accent:#7eb1c2;--galaxy-light:#c2e0e6;--galaxy-stars:#b7d5dd;--galaxy-world:#78a9b8;--galaxy-complete:#a8cbd0}
+.galaxy-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:25px;padding:2px 2px 20px;border-bottom:1px solid var(--galaxy-line)}
+.galaxy-heading .eyebrow{margin:0 0 7px;color:#b99c6b}
+.campaign-galaxy .eyebrow,.campaign-galaxy .galaxy-heading .eyebrow,.campaign-galaxy .galaxy-sidebar-title .eyebrow{color:var(--galaxy-gold)}
+.galaxy-heading h2{margin:0 0 6px;font:600 26px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.galaxy-heading>div:first-child>p:last-child{max-width:650px;margin:0;color:#aaa99f;font-size:12px;line-height:1.6}
+.galaxy-progress{width:190px;flex:none;display:grid;gap:5px;padding-left:17px;border-left:1px solid #403c32}
+.galaxy-progress>span,.galaxy-detail-kicker,.galaxy-map-caption,.galaxy-map-scale{font:9px var(--mono);letter-spacing:.8px;color:var(--galaxy-muted)}
+.galaxy-progress>b{font:600 24px var(--display);color:var(--galaxy-ink)}
+.galaxy-progress>b small{font:12px var(--mono);color:var(--galaxy-muted)}
+.galaxy-progress>div{height:3px;background:#353229}.galaxy-progress>div i{display:block;height:100%;background:var(--galaxy-gold);transition:width .3s}
+.galaxy-workspace{display:grid;grid-template-columns:250px minmax(440px,1fr) 300px;min-height:860px;margin-top:17px;border:1px solid #343129;background:#12120f}
+.galaxy-sidebar,.galaxy-detail{min-width:0;padding:16px;background:#141410}
+.galaxy-sidebar{display:flex;flex-direction:column;border-right:1px solid #343129}
+.galaxy-sidebar-title{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+.galaxy-sigil{width:35px;height:35px;display:grid;place-items:center;border:1px solid var(--galaxy-gold);color:var(--galaxy-gold);font:19px var(--display)}
+.galaxy-sidebar-title .eyebrow{margin:0 0 3px;color:#9e8a66}.galaxy-sidebar-title h3{margin:0;font:600 15px var(--display);text-transform:uppercase}
+.galaxy-filter{display:grid;gap:6px;color:#858991;font:9px var(--mono);letter-spacing:.8px}
+.galaxy-filter select{width:100%;height:34px;padding:0 9px;border:1px solid #454032;background:#1b1a15;color:#dad6cc;font:inherit;font-size:12px}
+.galaxy-operation-list{display:grid;gap:4px;margin:12px -5px 15px;overflow:visible;max-height:none;padding:0 5px}
+.galaxy-operation{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 6px;text-align:left;border:1px solid transparent;border-bottom-color:#353229;background:transparent;color:var(--galaxy-ink);cursor:pointer;transition:background .16s,border-color .16s}
+.galaxy-operation:hover,.galaxy-operation:focus-visible,.galaxy-operation.operation-selected{outline:none;border-color:#5c5038;background:#1e1c16}
+.operation-number{width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--galaxy-gold);color:var(--galaxy-gold);font:9px var(--mono)}
+.operation-complete{border-color:#69764f;color:#b6ca8c}.operation-locked{border-color:#42464a;color:#777b81}
+.operation-copy{min-width:0;display:grid;gap:3px}.operation-copy b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 11px var(--display)}.operation-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#99958a;font-size:9px}
+.operation-status{white-space:nowrap;color:#858990;font:7px var(--mono)}.status-ready{color:var(--galaxy-gold)}.status-complete{color:#a8bc7f}
+.galaxy-controls-list{display:grid;gap:10px;margin-top:auto;padding-top:13px;border-top:1px solid #30343a}
+.galaxy-controls-list label{display:flex;align-items:center;gap:8px;color:#a5a7ab;font-size:10px;cursor:pointer}
+.galaxy-controls-list input{accent-color:#b3945d}
+.galaxy-controls-list>button{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border:0;background:transparent;color:#a79a80;text-align:left;font:9px var(--mono);letter-spacing:.7px;cursor:pointer}
+.galaxy-controls-list>button:hover{color:#e5dfd2}
+.galaxy-map-frame{position:relative;min-width:0;min-height:860px;overflow:hidden;background:#090907;cursor:grab;touch-action:none;user-select:none}
+.galaxy-map-frame:active{cursor:grabbing}
+.galaxy-map-caption{position:absolute;z-index:2;top:14px;left:15px;right:15px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+.galaxy-map-tools{position:absolute;z-index:3;top:44px;right:13px;display:grid;gap:5px}
+.galaxy-map-tools button{width:30px;height:30px;border:1px solid #514731;background:#15140f;color:#c5a46d;font:17px var(--display);cursor:pointer}
+.galaxy-map-tools button:hover{border-color:#8c764e;background:#1a1c1d}
+.galaxy-map-svg{display:block;width:100%;height:100%;min-height:860px}
+.galaxy-scene{transition:transform .28s ease-out}
+.galaxy-map-scale{position:absolute;right:14px;bottom:13px;padding:6px 8px;background:#0a0a08d9;border:1px solid #39352c;font-size:8px}
+.galaxy-arms{stroke:var(--galaxy-arm-1);stroke-width:45;opacity:.16}
+.galaxy-arms path:nth-child(2){stroke:var(--galaxy-arm-2);stroke-width:36;opacity:.68}.galaxy-arms path:nth-child(3){stroke:var(--galaxy-arm-3);stroke-width:31;opacity:.54}.galaxy-arms .galaxy-arm-highlight{stroke:var(--galaxy-light);stroke-width:1.2;stroke-dasharray:3 7;opacity:.45}
+.galaxy-sector-lines{stroke:var(--galaxy-accent);stroke-width:.7;stroke-dasharray:3 7;opacity:.2}
+.galaxy-region-labels text{fill:var(--galaxy-accent);font:9px var(--mono);letter-spacing:1.1px;opacity:.58}.galaxy-region-labels .warp-eye-label{fill:#a35c4e;opacity:.72}
+.galaxy-stars{fill:var(--galaxy-stars)}.galaxy-routes line{stroke:var(--galaxy-accent);stroke-width:1;stroke-dasharray:4 7;opacity:.3;pointer-events:none}.galaxy-routes line.route-active{stroke:var(--galaxy-light);stroke-width:1.7;stroke-dasharray:5 5;opacity:.9}
+.galaxy-world{cursor:pointer;outline:none}.world-hit-area{fill:transparent}.world-orbit{fill:none;stroke:var(--galaxy-accent);stroke-width:1.2;opacity:.82;transition:r .18s,stroke .18s,opacity .18s}.world-core{fill:var(--galaxy-world);stroke:var(--galaxy-light);stroke-width:.7;transition:r .18s,fill .18s}.world-label{fill:var(--galaxy-light);font:9px var(--mono);letter-spacing:.8px;paint-order:stroke;stroke:#0b0b09;stroke-width:3px;stroke-linejoin:round;opacity:.86;pointer-events:none;transition:opacity .18s,fill .18s}.world-linked .world-orbit{stroke:var(--galaxy-light);opacity:1}.world-linked .world-core{fill:var(--galaxy-light)}.world-selected .world-orbit{r:18;stroke:var(--galaxy-light);stroke-width:1.6;opacity:1}.world-selected .world-label,.galaxy-world:hover .world-label,.galaxy-world:focus .world-label{fill:#f4e6c5;opacity:1}.galaxy-world:hover .world-orbit,.galaxy-world:focus .world-orbit{r:19;stroke:var(--galaxy-light);opacity:1}.world-complete-mark{fill:none;stroke:var(--galaxy-complete);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.galaxy-detail{display:flex;flex-direction:column;border-left:1px solid #343129;overflow:auto;max-height:720px}
+.galaxy-detail-kicker{display:flex;justify-content:space-between;align-items:center;color:var(--galaxy-gold)}.planet-illustration{position:relative;height:110px;display:grid;place-items:center;margin:9px 0 3px;overflow:hidden;background:radial-gradient(ellipse at center,rgba(145,113,57,.16),transparent 66%)}
+.planet-disc{position:relative;z-index:1;width:69px;height:69px;border-radius:50%;background:radial-gradient(circle at 33% 28%,#a08d65 0,#62543a 34%,#2b271d 68%,#12120d 100%);box-shadow:inset -10px -8px 17px #030302cc,0 0 27px #a38a5a35}
+.planet-terra{background:radial-gradient(circle at 36% 31%,#c0ad7b 0,#756747 36%,#39321f 69%,#17150f 100%)}.planet-luna{background:radial-gradient(circle at 37% 28%,#bbb49f 0,#7e7762 38%,#464132 72%,#18170f 100%)}.planet-mars{background:radial-gradient(circle at 35% 31%,#c19870 0,#835b42 40%,#3c2e2c 72%,#171517 100%)}.planet-calth,.planet-macragge{background:radial-gradient(circle at 34% 28%,#a2a07c 0,#65705a 42%,#383d2c 72%,#17180f 100%)}.planet-istvaan-iii,.planet-istvaan-v{background:radial-gradient(circle at 33% 27%,#aa6f5d 0,#673f39 42%,#332627 72%,#14151a 100%)}.planet-orbit{position:absolute;width:116px;height:39px;border:1px solid #b99d6b66;border-radius:50%;transform:rotate(-24deg)}.orbit-two{width:137px;height:51px;transform:rotate(29deg);border-color:#a1895544}
+.galaxy-detail>h3{margin:0;text-align:center;font:600 22px/1.1 var(--display);letter-spacing:.05em}.planet-type{text-align:center;margin:5px 0 15px;color:#9c9fa2;font-size:10px;text-transform:uppercase;letter-spacing:.6px}
+.planet-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0;padding:11px 0;border-top:1px solid #39362d;border-bottom:1px solid #39362d}.planet-facts div{min-width:0}.planet-facts dt{margin-bottom:4px;color:#99958a;font:8px var(--mono);letter-spacing:.7px}.planet-facts dd{margin:0;color:#d0cbc0;font-size:10px;line-height:1.4}.planet-description{margin:12px 0;color:#b8b4aa;font-size:11px;line-height:1.65}
+.planet-related{margin-top:5px}.planet-related>.eyebrow{margin-bottom:7px;color:#a89164;font-size:8px}.planet-related-entry{padding:7px 0;border-top:1px solid #38352c}.planet-related-operation{width:100%;display:grid;grid-template-columns:22px minmax(0,1fr);gap:2px 7px;padding:0;border:0;background:transparent;color:#ded9cd;text-align:left;cursor:pointer}.planet-related-operation>span{grid-row:span 2;color:#b89b65;font:9px var(--mono)}.planet-related-operation>b{font:500 10px var(--display)}.planet-related-operation>small{color:#a29c8d;font:7px var(--mono)}.planet-related-operation:hover b,.related-selected b{color:#e4c582}
+.planet-related-actions{display:flex;flex-wrap:wrap;gap:10px;margin:7px 0 0 29px}.planet-related-actions button,.planet-related-actions a{padding:0;border:0;background:none;color:#b9a475;font:9px var(--mono);text-decoration:none;cursor:pointer}.planet-related-actions button:hover,.planet-related-actions a:hover{color:#e8dbc0}
+.planet-lore-excerpt{margin:9px 0 0 28px;padding:9px;border-left:1px solid #786645;background:#161a1f}.planet-lore-excerpt p{margin:0 0 8px;color:#b4b4b1;font-size:10px;line-height:1.65}.planet-lore-excerpt p:last-child{margin-bottom:0}
+.galaxy-selected-operation{margin-top:14px;padding:12px;border:1px solid #413d34;background:#171a1e}.galaxy-selected-operation .eyebrow{margin:0 0 5px;color:var(--galaxy-gold);font-size:8px}.galaxy-selected-operation h4{margin:0 0 6px;font:600 13px var(--display)}.galaxy-selected-operation>p:not(.eyebrow){margin:0;color:#b8b4aa;font-size:10px;line-height:1.6}.galaxy-selected-operation .button{margin-top:10px;width:100%;justify-content:center;font-size:9px}
+@media(max-width:1200px){.galaxy-workspace{grid-template-columns:235px minmax(360px,1fr)}.galaxy-detail{grid-column:1/-1;display:grid;grid-template-columns:140px minmax(170px,.7fr) minmax(250px,1.3fr);column-gap:18px;max-height:none;border-top:1px solid #39362d;border-left:0}.galaxy-detail-kicker{grid-column:1/-1}.planet-illustration{grid-column:1;grid-row:2/5}.galaxy-detail>h3,.planet-type{grid-column:2}.planet-facts,.planet-description{grid-column:2}.planet-related,.galaxy-selected-operation{grid-column:3}.planet-related{grid-row:2/5}.galaxy-selected-operation{align-self:start}}
+@media(max-width:900px){.campaign-galaxy{width:calc(100vw - 48px)}}
+@media(max-width:760px){.campaign-galaxy{left:50%;width:calc(100vw - 36px);margin-top:22px;padding:15px 12px}.galaxy-heading{align-items:flex-start;flex-direction:column;gap:14px}.galaxy-heading h2{font-size:22px}.galaxy-progress{width:100%;padding:0;border:0;grid-template-columns:1fr auto;align-items:center}.galaxy-progress>div{grid-column:1/-1}.galaxy-workspace{display:flex;flex-direction:column;min-height:0}.galaxy-map-frame{order:0;min-height:480px;height:min(72vh,720px)}.galaxy-map-svg{min-height:480px}.galaxy-sidebar{order:1;border-right:0;border-top:1px solid #2e3339}.galaxy-operation-list{max-height:none;overflow:visible}.galaxy-detail{order:2;display:flex;max-height:none;border-top:1px solid #2e3339}.planet-illustration{width:100%;height:100px}.galaxy-detail>h3,.planet-type{grid-column:auto}.planet-facts,.planet-description,.planet-related,.galaxy-selected-operation{grid-column:auto}.galaxy-detail-kicker{width:100%}.galaxy-map-caption{font-size:7px;left:9px;right:9px}.galaxy-map-caption span:last-child{text-align:right}.galaxy-map-tools{top:41px;right:8px}.galaxy-map-tools button{width:28px;height:28px}.galaxy-map-scale{font-size:7px}.galaxy-region-labels text{font-size:10px}.world-label{font-size:12px}.galaxy-workspace{border-left:0;border-right:0}}
+@media(max-width:420px){.galaxy-map-frame{min-height:420px;height:420px}.galaxy-map-svg{min-height:420px}.galaxy-detail{padding:14px}.galaxy-operation{grid-template-columns:26px minmax(0,1fr) auto;gap:6px}.operation-status{font-size:6px}.galaxy-map-caption span:first-child{max-width:55%;line-height:1.4}}
+@media(prefers-reduced-motion:reduce){.campaign-galaxy *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.campaign-galaxy.faction-chaos #galaxy-nebula stop:first-child{stop-color:#a45e54}.campaign-galaxy.faction-chaos #galaxy-nebula stop:nth-child(2){stop-color:#603b38}.campaign-galaxy.faction-chaos #galaxy-core stop:first-child{stop-color:#cb8670}
+.campaign-galaxy.faction-orks #galaxy-nebula stop:first-child{stop-color:#849756}.campaign-galaxy.faction-orks #galaxy-nebula stop:nth-child(2){stop-color:#454d31}.campaign-galaxy.faction-orks #galaxy-core stop:first-child{stop-color:#b3bd6c}
+.campaign-galaxy.faction-tau #galaxy-nebula stop:first-child{stop-color:#6d9fb2}.campaign-galaxy.faction-tau #galaxy-nebula stop:nth-child(2){stop-color:#365c69}.campaign-galaxy.faction-tau #galaxy-core stop:first-child{stop-color:#9fcbd2}
+.campaign-galaxy.faction-chaos .planet-disc{background:radial-gradient(circle at 33% 28%,#a06d5d 0,#613a35 38%,#2c1d1c 72%,#12100f 100%)}
+.campaign-galaxy.faction-orks .planet-disc{background:radial-gradient(circle at 33% 28%,#aaa66c 0,#5b5a35 38%,#292719 72%,#12110d 100%)}
+.campaign-galaxy.faction-tau .planet-disc{background:radial-gradient(circle at 33% 28%,#87b0b3 0,#476b70 38%,#203439 72%,#101516 100%)}
+.campaign-galaxy.faction-imperium .galaxy-workspace{border-color:#49402e;background:#11110e}
+.campaign-galaxy.faction-imperium .galaxy-sidebar,.campaign-galaxy.faction-imperium .galaxy-detail{background:#13130f}
+.campaign-galaxy.faction-imperium .galaxy-sidebar{border-color:#403927}
+.campaign-galaxy.faction-imperium .galaxy-detail{border-color:#403927}
+.campaign-galaxy.faction-imperium .imperial-cartography{isolation:isolate;background:radial-gradient(ellipse at 47% 52%,#1c1a13 0,#10100d 55%,#090907 100%);box-shadow:inset 0 0 0 1px #211e16}
+.campaign-galaxy.faction-imperium .imperial-cartography::before{position:absolute;z-index:1;inset:12px;content:"";pointer-events:none;border:1px solid #8c754533;background:linear-gradient(#b49a653d,#b49a653d) left top/24px 1px no-repeat,linear-gradient(#b49a653d,#b49a653d) left top/1px 24px no-repeat,linear-gradient(#b49a653d,#b49a653d) right top/24px 1px no-repeat,linear-gradient(#b49a653d,#b49a653d) right top/1px 24px no-repeat,linear-gradient(#b49a653d,#b49a653d) left bottom/24px 1px no-repeat,linear-gradient(#b49a653d,#b49a653d) left bottom/1px 24px no-repeat,linear-gradient(#b49a653d,#b49a653d) right bottom/24px 1px no-repeat,linear-gradient(#b49a653d,#b49a653d) right bottom/1px 24px no-repeat}
+.campaign-galaxy.faction-imperium .imperial-cartography .galaxy-map-svg{position:relative;z-index:0}
+.imperium-orbital-lines{stroke:#c5a46d;stroke-width:.8;stroke-dasharray:2 6;opacity:.34;pointer-events:none}
+.imperium-orbital-lines circle:first-child{stroke-dasharray:none;opacity:.75}
+.imperium-orbital-lines circle:nth-child(2){stroke-dasharray:1 5;opacity:.65}
+.imperium-orbital-lines circle:nth-child(3){stroke-dasharray:5 8;opacity:.72}
+.imperium-orbital-lines path{stroke-dasharray:1 8;opacity:.48}
+.imperium-orbit-ticks{stroke-width:1.4;stroke-dasharray:none;opacity:.9}
+.imperium-aquila{fill:none;stroke:#c5a46d;stroke-width:1.2;opacity:.68;pointer-events:none}
+.imperium-aquila circle{fill:#c5a46d;stroke:none}
+.imperium-aquila text{fill:#c5a46d;stroke:none;font:7px var(--mono);letter-spacing:1.2px}
+.campaign-galaxy.faction-imperium .galaxy-map-caption{color:#bca577}
+.campaign-galaxy.faction-imperium .galaxy-map-tools button{border-color:#625238;background:#15140f;color:#d0b477}
+.campaign-galaxy.faction-imperium .galaxy-map-scale{border-color:#54472f;color:#c5a46d}
+.campaign-galaxy.faction-chaos .galaxy-workspace{border-color:#493330;background:#120f0e}
+.campaign-galaxy.faction-chaos .galaxy-sidebar,.campaign-galaxy.faction-chaos .galaxy-detail{background:#15100f}
+.campaign-galaxy.faction-chaos .galaxy-sidebar,.campaign-galaxy.faction-chaos .galaxy-detail{border-color:#44302e}
+.campaign-galaxy.faction-chaos .galaxy-map-frame{isolation:isolate;background:radial-gradient(ellipse at 48% 50%,#211311 0,#110c0c 55%,#090808 100%);box-shadow:inset 0 0 0 1px #281514}
+.campaign-galaxy.faction-chaos .galaxy-map-frame::before{position:absolute;z-index:1;inset:12px;content:"";pointer-events:none;border:1px solid #9a4c4030;background:linear-gradient(#bd69513b,#bd69513b) left top/22px 1px no-repeat,linear-gradient(#bd69513b,#bd69513b) left top/1px 22px no-repeat,linear-gradient(#bd69513b,#bd69513b) right top/22px 1px no-repeat,linear-gradient(#bd69513b,#bd69513b) right top/1px 22px no-repeat,linear-gradient(#bd69513b,#bd69513b) left bottom/22px 1px no-repeat,linear-gradient(#bd69513b,#bd69513b) left bottom/1px 22px no-repeat,linear-gradient(#bd69513b,#bd69513b) right bottom/22px 1px no-repeat,linear-gradient(#bd69513b,#bd69513b) right bottom/1px 22px no-repeat}
+.chaos-warp-cartography{pointer-events:none;stroke:#bd6254;stroke-width:1;opacity:.34}
+.chaos-warp-cartography .warp-ring{stroke-dasharray:3 9;opacity:.65}
+.chaos-warp-cartography .warp-ring-one{stroke-width:1.4;stroke-dasharray:14 7 2 7;opacity:.85}
+.chaos-warp-cartography .warp-ring-two{stroke-dasharray:1 8;opacity:.62}
+.chaos-warp-cartography .warp-ring-three{stroke-dasharray:18 11 3 9;opacity:.8}
+.chaos-warp-cartography .warp-ring-ellipse{stroke-dasharray:2 12;opacity:.45}
+.chaos-warp-cartography .warp-fracture{stroke:#a84c43;stroke-width:1.3;stroke-dasharray:5 3 1 4;opacity:.55}
+.chaos-warp-cartography .warp-sigil{stroke:#bf6656;stroke-width:1.1;opacity:.45}
+.chaos-warp-cartography .warp-map-mark{fill:#bf6656;stroke:none;font:7px var(--mono);letter-spacing:1px;opacity:.68}
+.campaign-galaxy.faction-chaos .galaxy-map-caption{color:#bd796c}
+.campaign-galaxy.faction-chaos .galaxy-map-tools button{border-color:#5a3934;background:#17100f;color:#c27b6c}
+.campaign-galaxy.faction-chaos .galaxy-map-scale{border-color:#51332e;color:#bc7468}
+.campaign-galaxy.faction-chaos .galaxy-routes line{stroke:#a84d45;stroke-dasharray:3 8;opacity:.47}
+.campaign-galaxy.faction-chaos .galaxy-routes line.route-active{stroke:#e19a7e;stroke-dasharray:5 5;opacity:.92}
+.campaign-galaxy.faction-orks .galaxy-workspace{border-color:#3d4430;background:#11120d}
+.campaign-galaxy.faction-orks .galaxy-sidebar,.campaign-galaxy.faction-orks .galaxy-detail{background:#14150f}
+.campaign-galaxy.faction-orks .galaxy-sidebar,.campaign-galaxy.faction-orks .galaxy-detail{border-color:#393e2d}
+.campaign-galaxy.faction-orks .galaxy-map-frame{isolation:isolate;background:radial-gradient(ellipse at 48% 50%,#1a1d12 0,#10110d 58%,#090a08 100%);box-shadow:inset 0 0 0 1px #25291a}
+.campaign-galaxy.faction-orks .galaxy-map-frame::before{position:absolute;z-index:1;inset:13px;content:"";pointer-events:none;border:1px solid #8c965025;background:linear-gradient(#a3a97550,#a3a97550) left top/30px 2px no-repeat,linear-gradient(#a3a97550,#a3a97550) left top/2px 30px no-repeat,linear-gradient(#a3a97550,#a3a97550) right top/30px 2px no-repeat,linear-gradient(#a3a97550,#a3a97550) right top/2px 30px no-repeat,linear-gradient(#a3a97550,#a3a97550) left bottom/30px 2px no-repeat,linear-gradient(#a3a97550,#a3a97550) left bottom/2px 30px no-repeat,linear-gradient(#a3a97550,#a3a97550) right bottom/30px 2px no-repeat,linear-gradient(#a3a97550,#a3a97550) right bottom/2px 30px no-repeat,linear-gradient(118deg,transparent 18%,#a2a87909 18.2%,transparent 18.5%),linear-gradient(35deg,transparent 78%,#a2a8790b 78.2%,transparent 78.5%)}
+.orks-waaagh-cartography{pointer-events:none;stroke:#a6b765;stroke-width:1;opacity:.45}
+.orks-waaagh-cartography .orks-panel-seams{stroke:#81855e;stroke-width:2;stroke-dasharray:20 4 3 7;opacity:.3}
+.orks-waaagh-cartography .orks-coordinate-lines{stroke:#a6b765;stroke-width:.8;stroke-dasharray:5 4;opacity:.46}
+.orks-waaagh-cartography .orks-advance-route{stroke:#b64f3f;stroke-width:2.2;stroke-dasharray:11 6 3 5;stroke-linecap:square;opacity:.74}
+.orks-waaagh-cartography .orks-target{stroke:#c84b3d;stroke-width:1.5;stroke-dasharray:4 3;opacity:.82}
+.orks-waaagh-cartography .orks-target circle:first-child{stroke-width:1;stroke-dasharray:2 5;opacity:.85}
+.orks-waaagh-cartography .orks-target circle:nth-child(2){stroke-dasharray:none;opacity:.9}
+.orks-waaagh-cartography .orks-scratched-mark{stroke:#a6b765;stroke-width:2;stroke-linejoin:bevel;opacity:.42}
+.orks-waaagh-cartography .orks-coordinate-label,.orks-waaagh-cartography .orks-map-stamp{fill:#b7c773;stroke:none;font:8px var(--mono);letter-spacing:1px;opacity:.72}
+.orks-waaagh-cartography .orks-map-stamp{font-weight:bold;letter-spacing:1.5px}
+.campaign-galaxy.faction-orks .galaxy-map-caption{color:#aeb978}
+.campaign-galaxy.faction-orks .galaxy-map-tools button{border-color:#464d31;background:#17180f;color:#b5c56b}
+.campaign-galaxy.faction-orks .galaxy-map-scale{border-color:#42472f;color:#aeb978}
+.campaign-galaxy.faction-orks .galaxy-routes line{stroke:#a7493a;stroke-width:1.5;stroke-dasharray:7 5 2 5;opacity:.62}
+.campaign-galaxy.faction-orks .galaxy-routes line.route-active{stroke:#e05a42;stroke-width:2;stroke-dasharray:10 4 2 4;opacity:.95}
+.campaign-galaxy.faction-tau .galaxy-workspace{border-color:#2e4950;background:#0f1315}
+.campaign-galaxy.faction-tau .galaxy-sidebar,.campaign-galaxy.faction-tau .galaxy-detail{background:#111619}
+.campaign-galaxy.faction-tau .galaxy-sidebar,.campaign-galaxy.faction-tau .galaxy-detail{border-color:#2b434a}
+.campaign-galaxy.faction-tau .galaxy-map-frame{isolation:isolate;background:radial-gradient(ellipse at 48% 50%,#10232a 0,#0c1519 58%,#080c0f 100%);box-shadow:inset 0 0 0 1px #19333d}
+.campaign-galaxy.faction-tau .galaxy-map-frame::before{position:absolute;z-index:1;inset:12px;content:"";pointer-events:none;border:1px solid #60b6c522;background:linear-gradient(#6db7c74a,#6db7c74a) left top/24px 1px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) left top/1px 24px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) right top/24px 1px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) right top/1px 24px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) left bottom/24px 1px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) left bottom/1px 24px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) right bottom/24px 1px no-repeat,linear-gradient(#6db7c74a,#6db7c74a) right bottom/1px 24px no-repeat}
+.tau-strategic-analysis{pointer-events:none;stroke:#6db7c7;stroke-width:.9;opacity:.42}
+.tau-strategic-analysis .tau-grid-lines{stroke-dasharray:1 9;opacity:.28}
+.tau-strategic-analysis .tau-vector-routes{stroke:#8bd0dc;stroke-width:1.6;stroke-dasharray:7 5;opacity:.62}
+.tau-strategic-analysis .tau-analysis-frame{stroke:#6db7c7;stroke-width:1;stroke-dasharray:none;opacity:.42}
+.tau-strategic-analysis .tau-scan-ring{stroke:#76c6d5;stroke-width:.9;stroke-dasharray:3 7;opacity:.58}
+.tau-strategic-analysis .tau-scan-ring circle:first-child{stroke-dasharray:none;opacity:.8}
+.tau-strategic-analysis .tau-scan-ring circle:nth-child(2){stroke-dasharray:2 6}
+.tau-strategic-analysis .tau-scan-core{fill:#92deea;stroke:none;opacity:.85}
+.tau-strategic-analysis .tau-data-panel{stroke:#70b8c8;stroke-width:.8;opacity:.78}
+.tau-strategic-analysis .tau-data-panel>path:first-child{fill:#0c1a20dd;stroke:#70b8c8}
+.tau-strategic-analysis .tau-data-panel>path:nth-child(2){fill:#70b8c8;stroke:none;opacity:.6}
+.tau-strategic-analysis .tau-data-panel text,.tau-strategic-analysis .tau-coordinate{fill:#91d2dd;stroke:none;font:7px var(--mono);letter-spacing:.7px}
+.tau-strategic-analysis .tau-signal-bars{stroke-width:2}
+.campaign-galaxy.faction-tau .galaxy-map-caption{color:#8bc4d0}
+.campaign-galaxy.faction-tau .galaxy-map-tools button{border-color:#31535d;background:#0f1b20;color:#8dc7d3}
+.campaign-galaxy.faction-tau .galaxy-map-scale{border-color:#2d4d55;color:#8bc4d0}
+.campaign-galaxy.faction-tau .galaxy-routes line{stroke:#61aabc;stroke-width:1;stroke-dasharray:2 6;opacity:.5}
+.campaign-galaxy.faction-tau .galaxy-routes line.route-active{stroke:#b4edf2;stroke-width:1.6;stroke-dasharray:5 4;opacity:.92}
+.galaxy-operation .operation-copy b{font-size:13px}
+.galaxy-operation .operation-copy small{font-size:10px}
+.galaxy-operation .operation-status{font-size:8px}
+.planet-related-operation>span{font-size:10px}
+.planet-related-operation>b{font-size:12px}
+.planet-related-operation>small{font-size:8px}
+.planet-related-actions button,.planet-related-actions a{font-size:10px}

@@ -6,58 +6,54 @@ import { orksLevels } from '../data/orksCampaign'
 import { tauLevels } from '../data/tauCampaign'
 import { applyServerProgress, getProgress } from '../utils/gameProgress'
 import { getCurrentUser, postJson, saveAuth } from '../utils/api'
+import CampaignGalaxyMap from './CampaignGalaxyMap'
 import './QuizPage.css'
 import './TauTheme.css'
 
 const freshMeters = () => ({ supplies: 2, unity: 1, intel: 1 })
 const meterNames = { supplies: 'Снабжение', unity: 'Поддержка', intel: 'Разведданные' }
 const effectsFor = (effect) => Object.entries(effect).map(([key, value]) => `${value > 0 ? '+' : ''}${value} ${meterNames[key].toLowerCase()}`).join(' · ')
-const imperiumCampaignArtwork = {
-  '01': '01_Pepel_Terry.svg',
-  '02': '02_Za_predelami_Terry.svg',
-  '03': '03_Poteryannye_synovya.svg',
-  '04': '04_Signal_s_Isstvana_III.svg',
-  '05': '05_Pepel_Isstvana_V.svg',
-  '06': '06_Bitva_za_Kalt.svg',
-  '07': '07_Poslednyaya_oborona_Terry.svg',
-  '08': '08_Imperium_posle_Eresi.svg',
-}
-const chaosCampaignArtwork = {
-  '01': '01_Shepot_za_granyu.svg',
-  '02': '02_Yad_na_Davine.svg',
-  '03': '03_Pepel_Isstvana.svg',
-  '04': '04_Razrushit_Kalt.svg',
-  '05': '05_Posledniy_put_k_Terre.svg',
-  '06': '06_Bitva_za_Lunu.svg',
-  '07': '07_Izgnanie_v_Oko_Uzhasa.svg',
-}
 const campaignAwards = {
   'imperium-origin': { id: 'campaign-imperium-origin', icon: 'I', name: 'Объединитель Терры', description: 'Операция «Объединение Терры» завершена.' },
   'great-crusade': { id: 'campaign-great-crusade', icon: 'II', name: 'Навигатор Великого похода', description: 'Операция Великого крестового похода завершена.' },
   primarchs: { id: 'campaign-primarchs', icon: 'III', name: 'Собиратель сыновей', description: 'Операция по поиску Примархов завершена.' },
-  'istvaan-iii-warning': { id: 'campaign-istvaan-iii-warning', icon: 'IV', name: 'Вестник Исствана', description: 'Ты помог доставить Терре весть о мятеже.' },
-  'istvaan-v': { id: 'campaign-istvaan-v', icon: 'V', name: 'Выживший Исствана', description: 'Ты помог лоялистам пережить предательство на Исстване V.' },
-  'imperium-calth': { id: 'campaign-imperium-calth', icon: 'VI', name: 'Оборона Ультрамара', description: 'Отряды Ультрамаринов удержались после удара на Калте.' },
-  'siege-terra-loyalist': { id: 'campaign-siege-terra-loyalist', icon: 'VII', name: 'Щит Терры', description: 'Ты помог защитникам Императорского дворца.' },
-  'scouring-aftermath': { id: 'campaign-scouring-aftermath', icon: 'VIII', name: 'Начало Очищения', description: 'Империум начал долгую кампанию против предателей.' },
+  'imperium-davin': { id: 'campaign-imperium-davin', icon: 'IV', name: 'Свидетель Давина', description: 'Ты сохранил свидетельства о ранении Воителя.' },
+  'prospero-censure': { id: 'campaign-prospero-censure', icon: 'V', name: 'Пепел Просперо', description: 'Ты помог экспедиции пережить гибель Тизки.' },
+  'mars-schism': { id: 'campaign-mars-schism', icon: 'VI', name: 'Верность Марса', description: 'Ты поддержал лоялистов в гражданской войне Механикум.' },
+  'istvaan-iii-warning': { id: 'campaign-istvaan-iii-warning', icon: 'VII', name: 'Вестник Исствана', description: 'Ты помог доставить Терре весть о мятеже.' },
+  'istvaan-v': { id: 'campaign-istvaan-v', icon: 'VIII', name: 'Выживший Исствана', description: 'Ты помог лоялистам пережить предательство на Исстване V.' },
+  'imperium-calth': { id: 'campaign-imperium-calth', icon: 'IX', name: 'Оборона Ультрамара', description: 'Отряды Ультрамаринов удержались после удара на Калте.' },
+  'beta-garmon': { id: 'campaign-beta-garmon', icon: 'X', name: 'Рубеж Гармона', description: 'Ты помог задержать наступление Хоруса на Бета-Гармоне.' },
+  'siege-terra-loyalist': { id: 'campaign-siege-terra-loyalist', icon: 'XI', name: 'Щит Терры', description: 'Ты помог защитникам Императорского дворца.' },
+  'scouring-aftermath': { id: 'campaign-scouring-aftermath', icon: 'XII', name: 'Начало Очищения', description: 'Империум начал долгую кампанию против предателей.' },
   'chaos-whispers': { id: 'campaign-chaos-whispers', icon: 'I', name: 'Глас из варпа', description: 'Первая операция сил Хаоса завершена.' },
   'davin-fall': { id: 'campaign-davin-fall', icon: 'II', name: 'Путь Воителя', description: 'Операция на Давине завершена.' },
-  'istvaan-betrayal': { id: 'campaign-istvaan-betrayal', icon: 'III', name: 'Пепел Исствана', description: 'Предательство на Исстване завершено.' },
-  'chaos-calth': { id: 'campaign-chaos-calth', icon: 'IV', name: 'Пепел Калта', description: 'Несущие Слово нанесли удар по Ультрамаринам.' },
-  'siege-terra': { id: 'campaign-siege-terra', icon: 'V', name: 'Осада Терры', description: 'Последняя битва Хоруса за власть завершена.' },
-  'battle-luna': { id: 'campaign-battle-luna', icon: 'VI', name: 'Побег из Сола', description: 'Ты вывел часть сил из Солнечной системы.' },
-  'eye-retreat': { id: 'campaign-eye-retreat', icon: 'VII', name: 'Путь в Око', description: 'Уцелевшие силы Хаоса добрались до убежища.' },
+  'signus-prime': { id: 'campaign-signus-prime', icon: 'III', name: 'Ловушка на Сигнусе', description: 'Попытка Хоруса склонить Сангвиния к Хаосу завершена.' },
+  'istvaan-betrayal': { id: 'campaign-istvaan-betrayal', icon: 'IV', name: 'Пепел Исствана', description: 'Предательство на Исстване завершено.' },
+  'chaos-calth': { id: 'campaign-chaos-calth', icon: 'V', name: 'Пепел Калта', description: 'Несущие Слово нанесли удар по Ультрамаринам.' },
+  'shadow-crusade': { id: 'campaign-shadow-crusade', icon: 'VI', name: 'Теневой крестовый поход', description: 'Лоргар и Ангрон вторглись в Ультрамар.' },
+  'molech-campaign': { id: 'campaign-molech-campaign', icon: 'VII', name: 'Врата Молеха', description: 'Хорус овладел источником силы Варпа.' },
+  'beta-garmon-chaos': { id: 'campaign-beta-garmon-chaos', icon: 'VIII', name: 'Пролом у Бета-Гармона', description: 'Путь Хоруса к Терре открыт.' },
+  'siege-terra': { id: 'campaign-siege-terra', icon: 'IX', name: 'Осада Терры', description: 'Последняя битва Хоруса за власть завершена.' },
+  'battle-luna': { id: 'campaign-battle-luna', icon: 'X', name: 'Побег из Сола', description: 'Ты вывел часть сил из Солнечной системы.' },
+  'eye-retreat': { id: 'campaign-eye-retreat', icon: 'XI', name: 'Путь в Око', description: 'Уцелевшие силы Хаоса добрались до убежища.' },
   'orks-gathering': { id: 'campaign-orks-gathering', icon: 'I', name: 'Зов Waaagh!', description: 'Первая орда собрана.' },
   'orks-ullanor-gates': { id: 'campaign-orks-ullanor-gates', icon: 'II', name: 'Врата Улланора', description: 'Орда добралась до крепости Урлакка Урга.' },
   'orks-ullanor-battle': { id: 'campaign-orks-ullanor-battle', icon: 'III', name: 'Последний бой Урлакка Урга', description: 'Досье о канонической битве на Улланоре открыто.' },
-  'orks-scattered-warband': { id: 'campaign-orks-scattered-warband', icon: 'IV', name: 'Орда снова собирается', description: 'Банда возродилась в 41-м тысячелетии.' },
-  'orks-armageddon': { id: 'campaign-orks-armageddon', icon: 'V', name: 'Зелёный прилив', description: 'Кампания Армагеддона завершена.' },
+  'orks-beast-arises': { id: 'campaign-orks-beast-arises', icon: 'IV', name: 'Восстание Зверя', description: 'Орочья орда прорвалась в Империум.' },
+  'orks-scattered-warband': { id: 'campaign-orks-scattered-warband', icon: 'V', name: 'Орда снова собирается', description: 'Банда возродилась в 41-м тысячелетии.' },
+  'orks-armageddon': { id: 'campaign-orks-armageddon', icon: 'VI', name: 'Зелёный прилив', description: 'Кампания Армагеддона завершена.' },
+  'orks-octarius': { id: 'campaign-orks-octarius', icon: 'VII', name: 'Бойня Октариуса', description: 'Газкулл возглавил орду против Левиафана.' },
+  'orks-krongar': { id: 'campaign-orks-krongar', icon: 'VIII', name: 'Десять дней на Кронгаре', description: 'Газкулл пережил дуэль с Рагнаром.' },
   'tau-first-sphere': { id: 'campaign-tau-first-sphere', icon: 'I', name: 'Общее предназначение', description: 'Подготовь первые экспедиции Империи Тау.' },
   'tau-damocles': { id: 'campaign-tau-damocles', icon: 'II', name: 'Рубеж Дамокла', description: 'Переживи Крестовый поход Дамокла.' },
   'tau-arkunasha': { id: 'campaign-tau-arkunasha', icon: 'III', name: 'Щит Аркунаши', description: 'Удержи орочий натиск вместе с Фарсайтом.' },
   'tau-farsight-enclaves': { id: 'campaign-tau-farsight-enclaves', icon: 'IV', name: 'Красный исход', description: 'Сопроводи Фарсайта в изгнание.' },
-  'tau-fourth-sphere': { id: 'campaign-tau-fourth-sphere', icon: 'V', name: 'Возвращение Четвёртой', description: 'Собери экспедицию после варп-катастрофы.' },
-  'tau-fifth-sphere': { id: 'campaign-tau-fifth-sphere', icon: 'VI', name: 'Новая сфера', description: 'Поддержи экспансию Шэдоусан.' },
+  'tau-agrellan': { id: 'campaign-tau-agrellan', icon: 'V', name: 'Вторая кампания на Аггреллане', description: 'Удержи Аггреллан во время имперской блокады.' },
+  'tau-fourth-sphere': { id: 'campaign-tau-fourth-sphere', icon: 'VI', name: 'Возвращение Четвёртой', description: 'Собери экспедицию после варп-катастрофы.' },
+  'tau-fifth-sphere': { id: 'campaign-tau-fifth-sphere', icon: 'VII', name: 'Новая сфера', description: 'Поддержи экспансию Шэдоусан.' },
+  'tau-chalnath': { id: 'campaign-tau-chalnath', icon: 'VIII', name: 'Возвращение на Ведик', description: 'Подготовь возвращение флота Тау в систему Ведик.' },
+  'tau-cao-quo': { id: 'campaign-tau-cao-quo', icon: 'IX', name: 'Восстание на Цао Куо', description: 'Подави восстание силами четырёх каст.' },
 }
 
 export default function QuizPage() {
@@ -80,7 +76,8 @@ export default function QuizPage() {
   const level = campaignLevels.find((item) => item.id === selectedLevel)
   const completedLevels = progress.completedLevels || []
   const levelIndex = campaignLevels.findIndex((item) => item.id === selectedLevel)
-  const unlocked = levelIndex <= 0 || completedLevels.includes(campaignLevels[levelIndex - 1]?.id)
+  const nextLevel = campaignLevels[levelIndex + 1]
+  const unlocked = levelIndex <= 0 || completedLevels.includes(level?.id) || completedLevels.includes(campaignLevels[levelIndex - 1]?.id)
 
   React.useEffect(() => {
     const updateProgress = (event) => setProgress(event.detail)
@@ -191,13 +188,13 @@ export default function QuizPage() {
       <h1>{level.title}</h1>
       <p className="hero-lead">{level.objective}</p>
       <p className="campaign-note">Игровая операция — авторский сценарий. Архивная глава после победы пересказывает канонический лор и приводит источники.</p>
-      {alreadyComplete && !replaying ? <section className="campaign-result"><p className="eyebrow">ОПЕРАЦИЯ УЖЕ ЗАВЕРШЕНА</p><h2>Досье ждёт в архиве</h2><Link className="button button-primary" to={`/archive/${faction}/${level.id}`}>Открыть запись · {level.number} <span>→</span></Link>{faction === 'imperium' && level.scenes.some((item) => item.choices.some((choice) => choice.defection)) && <button className="button button-outline replay-choice-button" type="button" onClick={replayLevel}>Переиграть и выбрать сторону <span>↻</span></button>}</section> : <>
+      {alreadyComplete && !replaying ? <section className="campaign-result"><p className="eyebrow">ОПЕРАЦИЯ УЖЕ ЗАВЕРШЕНА</p><h2>Досье ждёт в архиве</h2><div className="campaign-result-actions"><Link className="button button-primary" to={`/archive/${faction}/${level.id}`}>Открыть запись · {level.number} <span>→</span></Link><Link className="button button-outline" to={nextLevel ? `/campaign?level=${nextLevel.id}` : '/campaign'}>{nextLevel ? 'Играть следующую операцию' : 'Вернуться к карте кампании'} <span>→</span></Link>{faction === 'imperium' && level.scenes.some((item) => item.choices.some((choice) => choice.defection)) && <button className="button button-outline replay-choice-button" type="button" onClick={replayLevel}>Переиграть и выбрать сторону <span>↻</span></button>}</div></section> : <>
         <div className="campaign-meters">{Object.entries(resourceLabels).map(([key, label]) => {
           const value = meters[key]
           const percentage = Math.min(100, Math.max(0, value / level.target[key] * 100))
           return <div className="campaign-meter" key={key}><div><span>{label}</span><b>{value} <small>/ цель {level.target[key]}</small></b></div><div className="campaign-meter-track"><span className={value >= level.target[key] ? 'meter-ready' : ''} style={{ width: `${percentage}%` }} /></div></div>
         })}</div>
-        {result === 'success' ? <section className="campaign-result"><p className="eyebrow">{alreadyComplete ? 'ПОВТОР ОПЕРАЦИИ · БЕЗ НАГРАДЫ' : 'ОПЕРАЦИЯ ВЫПОЛНЕНА · +100 XP'}</p><h2>Новый материал найден</h2><p>{alreadyComplete ? 'Операция пройдена повторно. Опыт и достижения повторно не начисляются.' : 'Отчёт принят. Теперь можно открыть архивную главу.'}</p><Link className="button button-primary" to={`/archive/${faction}/${level.id}`}>Открыть досье <span>→</span></Link></section> : <section className="campaign-scene">
+        {result === 'success' ? <section className="campaign-result"><p className="eyebrow">{alreadyComplete ? 'ПОВТОР ОПЕРАЦИИ · БЕЗ НАГРАДЫ' : 'ОПЕРАЦИЯ ВЫПОЛНЕНА · +100 XP'}</p><h2>Новый материал найден</h2><p>{alreadyComplete ? 'Операция пройдена повторно. Опыт и достижения повторно не начисляются.' : 'Отчёт принят. Теперь можно открыть архивную главу.'}</p><div className="campaign-result-actions"><Link className="button button-primary" to={`/archive/${faction}/${level.id}`}>Открыть досье <span>→</span></Link><Link className="button button-outline" to={nextLevel ? `/campaign?level=${nextLevel.id}` : '/campaign'}>{nextLevel ? 'Играть следующую операцию' : 'Вернуться к карте кампании'} <span>→</span></Link></div></section> : <section className="campaign-scene">
           <div className="campaign-scene-top"><span className="eyebrow">ЭТАП {sceneIndex + 1} ИЗ {level.scenes.length}</span><span className="sealed-count">ПРИКАЗЫВАЕТЕ ВЫ</span></div>
           <h2>{scene.title}</h2>
           <p>{scene.text}</p>
@@ -209,42 +206,14 @@ export default function QuizPage() {
     </main>
   }
 
-  return <main className={`content-page campaign-page ${faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : faction === 'tau' ? 'tau-theme' : ''}`}>
+  return <main className={`content-page campaign-page campaign-overview ${faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : faction === 'tau' ? 'tau-theme' : ''}`}>
     <Link className="back-link" to="/">← На главную</Link>
     {campaignMessage && <p className="campaign-alignment-notice" role="status">{campaignMessage}</p>}
     <p className="eyebrow">КАМПАНИЯ · {factionTitle}</p>
     <h1>{faction === 'chaos' ? 'Путь к Терре' : faction === 'orks' ? 'Путь Waaagh!' : faction === 'tau' ? 'Путь Высшего блага' : 'Путь к звёздам'}</h1>
-    <p className="hero-lead">{faction === 'chaos' ? 'Веди тайные культы и мятежные легионы от первых шёпотов Варпа через Калт и осаду Терры к Очищению. Выбирай тактику, удерживай союзников и открывай новые главы.' : faction === 'orks' ? 'Собери орду, пройди каноническую битву на Улланоре и продолжи поход в 41-м тысячелетии. Распределяй снабжение, поддержку и разведданные. Знание Warhammer не требуется.' : faction === 'tau' ? 'Пройди шесть операций от первых сфер и Крестового похода Дамокла до Фарсайта, Четвёртой и Пятой сфер. Координируй касты, разведку и огневую поддержку во имя Высшего блага.' : 'Пройди восемь операций: от объединения Терры и поиска Примархов до Исствана, Калта, обороны Терры и послевоенного Очищения. Распределяй силы, поддержку и разведданные. Знание Warhammer не требуется.'}</p>
+    <p className="hero-lead">{faction === 'chaos' ? 'Веди тайные культы и мятежные легионы от первых шёпотов Варпа через Калт и осаду Терры к Очищению. Выбирай тактику, удерживай союзников и открывай новые главы.' : faction === 'orks' ? 'Собери орду, пройди каноническую битву на Улланоре и продолжи поход в 41-м тысячелетии. Распределяй снабжение, поддержку и разведданные. Знание Warhammer не требуется.' : faction === 'tau' ? 'Пройди девять операций: от первых сфер и Крестового похода Дамокла через Аггреллан и Фарсайта до Четвёртой и Пятой сфер, Чалната и Цао Куо. Координируй касты, разведку и огневую поддержку во имя Высшего блага.' : 'Пройди двенадцать операций: от объединения Терры и поиска Примархов через Давин, Просперо, Марс, Исстван и Калт до Бета-Гармона, обороны Терры и послевоенного Очищения. Распределяй силы, поддержку и разведданные. Знание Warhammer не требуется.'}</p>
     <p className="campaign-note">Сюжетные операции — игровые сценарии проекта; архивные досье после них основаны на источниках по Warhammer 40,000.</p>
-    <section className="campaign-map-shell" aria-label="Карта операций кампании">
-      <header className="campaign-map-header">
-        <div><p className="eyebrow">СТРАТЕГИЧЕСКАЯ КАРТА · {factionTitle}</p><h2>Траектория кампании</h2><p>Выбирай следующий узел маршрута и смотри, как меняется фронт.</p></div>
-        <div className="campaign-map-progress"><span>УЗЛЫ ПРОЙДЕНЫ</span><b>{completedLevels.filter((id) => campaignLevels.some((item) => item.id === id)).length}<small> / {campaignLevels.length}</small></b><div><i style={{ width: `${completedLevels.filter((id) => campaignLevels.some((item) => item.id === id)).length / campaignLevels.length * 100}%` }} /></div></div>
-      </header>
-      <div className="campaign-map-legend"><span><i className="map-legend-ready" /> ДОСТУПНА</span><span><i className="map-legend-done">✓</i> ЗАВЕРШЕНА</span><span><i className="map-legend-locked">·</i> ЗАКРЫТА</span></div>
-      <div className="campaign-map">{campaignLevels.map((item, index) => {
-        const done = completedLevels.includes(item.id)
-        const canStart = index === 0 || completedLevels.includes(campaignLevels[index - 1].id)
-        const status = done ? 'complete' : canStart ? 'ready' : 'locked'
-        return <article className={`campaign-map-stop map-side-${index % 2 ? 'right' : 'left'} map-stop-${status}`} key={item.id}>
-          <span className="campaign-map-point" aria-hidden="true"><b>{done ? '✓' : item.number}</b></span>
-          <div className="campaign-map-card">
-            {faction === 'imperium' && <img className="campaign-map-card-art" src={`/images/campaign/imperium_svg/${imperiumCampaignArtwork[item.number]}`} alt="" aria-hidden="true" loading="lazy" />}
-            {faction === 'chaos' && <img className="campaign-map-card-art" src={`/images/campaign/chaos_svg/${chaosCampaignArtwork[item.number]}`} alt="" aria-hidden="true" loading="lazy" />}
-            <div className="campaign-map-card-top"><span>ОПЕРАЦИЯ {item.number}</span><span>{done ? 'ВЫПОЛНЕНА' : canStart ? 'СИГНАЛ ОБНАРУЖЕН' : 'НЕТ ДОСТУПА'}</span></div>
-            <span className="campaign-map-location">{item.subtitle}</span>
-            <h2>{item.title}</h2>
-            <p>{item.objective}</p>
-            <div className="campaign-map-card-bottom"><span>УЗЕЛ {String(index + 1).padStart(2, '0')} · {faction === 'orks' ? 'ВОЕННЫЙ ФРОНТ' : faction === 'chaos' ? 'ЗОНА ВАРП-ИСКАЖЕНИЯ' : 'СЕКТОР ТЕРРА'}</span>
-              {done ? <Link className="button button-outline" to={`/archive/${faction}/${item.id}`}>Открыть досье <span>↗</span></Link> : canStart ? <button className="button button-primary" type="button" onClick={() => setSearchParams({ level: item.id })}>Развернуть операцию <span>→</span></button> : <span className="campaign-map-locked-label">ПРОЙДИ ПРЕДЫДУЩИЙ УЗЕЛ</span>}
-            </div>
-          </div>
-        </article>
-      })}<article className={`campaign-map-stop map-side-${campaignLevels.length % 2 ? 'right' : 'left'} map-stop-ready campaign-online-stop`}>
-        <span className="campaign-map-point" aria-hidden="true"><b>↗</b></span>
-        <div className="campaign-map-card"><div className="campaign-map-card-top"><span>СЛЕДУЮЩАЯ ОПЕРАЦИЯ</span><span>СЕТЕВОЙ ФРОНТ</span></div><span className="campaign-map-location">НОВОЕ НАПРАВЛЕНИЕ · {factionTitle.toUpperCase()}</span><h2>Совместная операция</h2><p>Перейди к подготовке соединения для будущих сетевых миссий.</p><div className="campaign-map-card-bottom"><span>УЗЕЛ {String(campaignLevels.length + 1).padStart(2, '0')} · ОНЛАЙН-КАМПАНИЯ</span><Link className="button button-primary" to="/online">Развернуть операцию <span>→</span></Link></div></div>
-      </article></div>
-    </section>
+    <CampaignGalaxyMap faction={faction} levels={campaignLevels} completedLevels={completedLevels} onStartOperation={(levelId) => setSearchParams({ level: levelId })} />
     <p className="campaign-next-hint">Завершение каждой операции открывает отдельную архивную главу и следующий этап кампании.</p>
   </main>
 }

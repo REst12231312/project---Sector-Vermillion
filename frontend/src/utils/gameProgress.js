@@ -1,10 +1,10 @@
 import { postJson } from './api'
 const STORAGE_KEY = 'sv-progress'
 export const FACTION_IDS = ['imperium', 'chaos', 'orks', 'tau']
-export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs', 'istvaan-iii-warning', 'istvaan-v', 'imperium-calth', 'siege-terra-loyalist', 'scouring-aftermath']
-export const CHAOS_LEVEL_IDS = ['chaos-whispers', 'davin-fall', 'istvaan-betrayal', 'chaos-calth', 'siege-terra', 'battle-luna', 'eye-retreat']
-export const ORKS_LEVEL_IDS = ['orks-gathering', 'orks-ullanor-gates', 'orks-ullanor-battle', 'orks-scattered-warband', 'orks-armageddon']
-export const TAU_LEVEL_IDS = ['tau-first-sphere', 'tau-damocles', 'tau-arkunasha', 'tau-farsight-enclaves', 'tau-fourth-sphere', 'tau-fifth-sphere']
+export const IMPERIUM_LEVEL_IDS = ['imperium-origin', 'great-crusade', 'primarchs', 'imperium-davin', 'prospero-censure', 'mars-schism', 'istvaan-iii-warning', 'istvaan-v', 'imperium-calth', 'beta-garmon', 'siege-terra-loyalist', 'scouring-aftermath']
+export const CHAOS_LEVEL_IDS = ['chaos-whispers', 'davin-fall', 'signus-prime', 'istvaan-betrayal', 'chaos-calth', 'shadow-crusade', 'molech-campaign', 'beta-garmon-chaos', 'siege-terra', 'battle-luna', 'eye-retreat']
+export const ORKS_LEVEL_IDS = ['orks-gathering', 'orks-ullanor-gates', 'orks-ullanor-battle', 'orks-beast-arises', 'orks-scattered-warband', 'orks-armageddon', 'orks-octarius', 'orks-krongar']
+export const TAU_LEVEL_IDS = ['tau-first-sphere', 'tau-damocles', 'tau-arkunasha', 'tau-farsight-enclaves', 'tau-agrellan', 'tau-fourth-sphere', 'tau-fifth-sphere', 'tau-chalnath', 'tau-cao-quo']
 export const FACTION_DETAILS = {
   imperium: { name: 'Империум человечества', shortName: 'Империум', mark: 'I', levelIds: IMPERIUM_LEVEL_IDS, archivePath: '/archive/imperium' },
   chaos: { name: 'Силы Хаоса', shortName: 'Хаос', mark: '⛧', levelIds: CHAOS_LEVEL_IDS, archivePath: '/archive/chaos' },
