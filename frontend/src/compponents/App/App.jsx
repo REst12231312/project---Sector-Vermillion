@@ -7,7 +7,6 @@ import QuizPage from '../../pages/QuizPage'
 import MainLayout from '../../layout/MainLayout'
 import AuthPage from '../../pages/AuthPage'
 import ImperiumArchivePage from '../../pages/ImperiumArchivePage'
-import OnlinePage from '../../pages/OnlinePage'
 import { isAuthenticated } from '../../utils/api'
 
 function RequireAuth({ children }) {
@@ -28,7 +27,6 @@ export default function App() {
                     <Route path='factions/:factionId' element={<FactionPages />} />
                     <Route path='profile' element={<RequireAuth><PlayerPages /></RequireAuth>} />
                     <Route path='campaign' element={<RequireAuth><QuizPage /></RequireAuth>} />
-                    <Route path='online' element={<RequireAuth><OnlinePage /></RequireAuth>} />
                     <Route path='quiz' element={<Navigate to='/campaign' replace />} />
                     <Route path='archive/:factionId' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />
                     <Route path='archive/:factionId/:recordId' element={<RequireAuth><ImperiumArchivePage /></RequireAuth>} />

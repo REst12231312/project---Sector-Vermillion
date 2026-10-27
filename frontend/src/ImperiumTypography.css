@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --sv-header-overlap: 82px;
+  --sv-font-display: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  --sv-font-literary: 'Cormorant Garamond', Georgia, serif;
+  --sv-font-interface: 'Inter', Arial, sans-serif;
+  --sv-type-ink: #d6bd91;
+  --sv-type-gold: #c7a36a;
+  --sv-type-muted: #8e8576;
+  --sv-type-caption: #6f6a62;
+  --sv-type-bg: #0c0d0d;
+  --sv-type-divider: rgba(199, 163, 106, .25);
+  --sv-type-tint: rgba(199, 163, 106, .08);
+}
+
+/* Imperium typography, scoped to Imperium sections. */
+.imperium-theme {
+  --sv-type-gold: #c7a36a;
+  --sv-type-divider: rgba(199, 163, 106, .25);
+  --sv-type-tint: rgba(199, 163, 106, .08);
+  --gold: var(--sv-type-gold);
+  --muted: var(--sv-type-muted);
+  --line: var(--sv-type-divider);
+  color: var(--sv-type-ink);
+}
+.imperium-theme h1,
+.imperium-theme .hero h1,
+.imperium-theme.campaign-page > h1,
+.archive-timeline.imperium-theme h1,
+.imperium-theme h2,
+.imperium-theme .section-heading h2,
+.imperium-theme .campaign-scene h2,
+.imperium-theme .campaign-result h2,
+.imperium-theme h3,
+.faction-card.gold h3 {
+  color: var(--sv-type-gold);
+  font-family: var(--sv-font-display);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-shadow: none;
+  text-transform: uppercase;
+}
+.imperium-theme h1,
+.imperium-theme.campaign-page > h1,
+.imperium-theme .archive-timeline-heading h1 {
+  font-size: clamp(34px, 5.4vw, 64px);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.imperium-theme h2,
+.imperium-theme .section-heading h2 {
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.2;
+}
+.imperium-theme h3,
+.faction-card.gold h3 { font-size: clamp(18px, 2vw, 23px); line-height: 1.25; }
+.imperium-theme p:not(.eyebrow),
+.imperium-theme .hero-lead,
+.imperium-theme .archive-entry-description,
+.imperium-theme .archive-entry-lore p {
+  font-family: var(--sv-font-literary);
+  color: var(--sv-type-muted);
+}
+.imperium-theme .eyebrow,
+.imperium-theme .campaign-meter span,
+.imperium-theme .profile-stats article > span,
+.imperium-theme .profile-stats small,
+.imperium-theme .account-settings label {
+  color: var(--sv-type-caption);
+}
+.imperium-theme .hero-lead { font-size: clamp(17px, 1.8vw, 21px); line-height: 1.55; }
+.imperium-theme .section-heading h2::after,
+.imperium-theme .archive-timeline-heading h1::after {
+  content: '';
+  display: block;
+  width: 76px;
+  height: 1px;
+  margin: 13px auto 0;
+  background: linear-gradient(90deg, transparent, var(--sv-type-divider), transparent);
+}
+.imperium-theme .section-heading h2::before,
+.imperium-theme .archive-timeline-heading h1::before {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: calc(100% + 11px);
+  left: 50%;
+  background: var(--sv-type-gold);
+  transform: translateX(-50%) rotate(45deg);
+}
+.imperium-theme .section-heading h2,
+.imperium-theme .archive-timeline-heading h1 { position: relative; }
+
+.imperium-theme .button,
+.imperium-theme button.button,
+.faction-card.gold .button {
+  border: 1px solid var(--sv-type-divider);
+  border-radius: 0;
+  background: rgba(12, 13, 13, .82);
+  color: var(--sv-type-ink);
+  font: 500 12px/1.3 var(--sv-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: color 240ms ease, border-color 240ms ease, background-color 240ms ease;
+}
+.imperium-theme .button:hover,
+.imperium-theme button.button:hover,
+.faction-card.gold .button:hover {
+  border-color: rgba(199, 163, 106, .48);
+  background: rgba(199, 163, 106, .08);
+  color: #e0c99f;
+  transform: none;
+}
+.imperium-theme .profile-stats article > b,
+.imperium-theme .archive-timeline-progress b,
+.imperium-theme .campaign-level-index,
+.faction-card.gold .faction-mark { color: var(--sv-type-gold); }
+.archive-timeline.imperium-theme .archive-entry-title {
+  color: var(--sv-type-ink);
+  font: 500 clamp(19px, 2.4vw, 25px)/1.18 var(--sv-font-display);
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.archive-timeline.imperium-theme .entry-locked .archive-entry-title { color: var(--sv-type-muted); }
+.archive-timeline.imperium-theme .archive-timeline-list::before,
+.archive-timeline.imperium-theme .archive-timeline-entry::after,
+.archive-timeline.imperium-theme .archive-entry-facts,
+.archive-timeline.imperium-theme .archive-entry-sources { border-color: var(--sv-type-divider); }
+.archive-timeline.imperium-theme .archive-timeline-list::before,
+.archive-timeline.imperium-theme .archive-timeline-entry::after { background: var(--sv-type-divider); }
+.archive-timeline.imperium-theme .archive-timeline-marker-number {
+  border-color: var(--sv-type-divider);
+  color: var(--sv-type-muted);
+  font-family: var(--sv-font-interface);
+}
+.archive-timeline.imperium-theme .entry-unlocked .archive-timeline-marker-number {
+  border-color: var(--sv-type-gold);
+  color: var(--sv-type-gold);
+}
+.archive-timeline.imperium-theme .archive-entry-meta,
+.archive-timeline.imperium-theme .archive-timeline-marker-date {
+  color: var(--sv-type-caption);
+  font-family: var(--sv-font-interface);
+  letter-spacing: .08em;
+}
+.archive-timeline.imperium-theme .archive-entry-description {
+  color: var(--sv-type-muted);
+  font: 400 17px/1.45 var(--sv-font-literary);
+}
+.archive-timeline.imperium-theme .archive-entry-lore p {
+  color: var(--sv-type-ink);
+  font: 400 19px/1.7 var(--sv-font-literary);
+}
+.archive-timeline.imperium-theme .archive-entry-facts {
+  color: var(--sv-type-muted);
+  font: 400 13px/1.65 var(--sv-font-interface);
+}
+.archive-timeline.imperium-theme .archive-entry-sources .eyebrow,
+.archive-timeline.imperium-theme .archive-entry-meta span:last-child {
+  color: var(--sv-type-caption);
+}
+.archive-timeline.imperium-theme .archive-entry-sources a { color: var(--sv-type-gold); }
+.archive-timeline.imperium-theme .entry-unlocked .archive-entry-meta span:last-child { color: var(--sv-type-gold); }
+.imperium-theme .campaign-action { border-color: var(--sv-type-divider); }
+.imperium-theme .campaign-action b {
+  color: var(--sv-type-gold);
+  font: 500 14px/1.3 var(--sv-font-display);
+  letter-spacing: .04em;
+}
+.imperium-theme .faction-mark,
+.faction-card.gold .faction-mark { text-shadow: none; }
+
+@media (max-width: 760px) {
+  .imperium-theme h1 { letter-spacing: .045em; }
+  .imperium-theme .button,
+  .faction-card.gold .button { font-size: 10px; letter-spacing: .035em; }
+  .imperium-theme .section-heading h2::before,
+  .imperium-theme .archive-timeline-heading h1::before { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imperium-theme .button,
+  .faction-card.gold .button { transition: none; }
+}
+
+
+/* Welcome section typography preview. Other homepage and faction sections keep their current styles. */
+.home-welcome h1 {
+  color: var(--sv-type-gold);
+  font: 500 clamp(42px, 5.2vw, 68px)/1.06 var(--sv-font-display);
+  letter-spacing: .055em;
+  text-shadow: none;
+  overflow-wrap: anywhere;
+}
+.home-welcome h1 em {
+  color: var(--sv-type-ink);
+  font: 500 clamp(21px, 2.7vw, 31px)/1.28 var(--sv-font-literary);
+  letter-spacing: .015em;
+  text-transform: none;
+}
+.home-welcome h1::after {
+  content: '';
+  display: block;
+  width: 78px;
+  height: 1px;
+  margin-top: 17px;
+  background: linear-gradient(90deg, var(--sv-type-divider), transparent);
+}
+.hero.home-welcome {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 390px;
+  padding-bottom: 56px;
+}
+.home-page > .section-block { padding-top: 52px; }
+.home-welcome .hero-copy { max-width: 900px; }
+.home-welcome .eyebrow {
+  color: var(--sv-type-caption);
+  font: 500 11px/1.4 var(--sv-font-interface);
+  letter-spacing: .15em;
+}
+.home-welcome .hero-lead {
+  color: var(--sv-type-muted);
+  font: 400 clamp(17px, 1.5vw, 19px)/1.65 var(--sv-font-literary);
+}
+.home-welcome .button {
+  border: 1px solid var(--sv-type-divider);
+  border-radius: 0;
+  background: rgba(12, 13, 13, .82);
+  color: var(--sv-type-ink);
+  font: 500 12px/1.3 var(--sv-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: color 240ms ease, border-color 240ms ease, background-color 240ms ease;
+  gap: 10px;
+  padding: 10px 13px;
+}
+.home-welcome .button:hover {
+  border-color: var(--sv-type-gold);
+  background: var(--sv-type-tint);
+  color: var(--sv-type-ink);
+  transform: none;
+}
+.home-page .home-faction-grid { width: 100%; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 28px; }
+.home-page .home-faction-card { width: 100%; grid-column: 1 / -1; }
+.home-faction-card {
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(100px, .38fr) minmax(0, 1fr);
+  gap: 0;
+  background: #141512;
+}
+.home-faction-card::after { display: none; }
+.home-faction-poster {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  object-position: center;
+  align-self: start;
+  background: #0c0d0d;
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+.home-faction-copy { min-width: 0; display: flex; flex-direction: column; align-items: stretch; padding: 19px; }
+.home-faction-copy .card-top { margin-bottom: 12px; font-size: 11px; letter-spacing: 1px; }
+.home-page .home-faction-card .home-faction-copy h3 { margin: 0 0 12px; font-size: clamp(20px, 2vw, 26px); line-height: 1.2; overflow-wrap: anywhere; }
+.home-page .home-faction-card .home-faction-copy > .home-faction-quote {
+  margin: 0 0 14px;
+  color: #d6bd91;
+  font: 500 clamp(32px, 3.2vw, 42px)/1.32 var(--sv-font-literary);
+}
+.home-faction-source { margin: 0 0 16px; }
+.home-faction-source summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 18px;
+  color: #8e8576;
+  cursor: pointer;
+  list-style: none;
+  font: 12px/1.55 var(--sv-font-interface);
+}
+.home-faction-source summary::after { content: '+'; position: absolute; right: 0; bottom: 0; color: currentColor; font: 14px/1 var(--sv-font-interface); }
+.home-faction-source[open] summary::after { content: '−'; }
+.home-faction-source summary::-webkit-details-marker { display: none; }
+.home-faction-source summary>span { color: #6f6a62; font: 10px var(--mono); letter-spacing: 1px; }
+.home-faction-source summary cite { color: currentColor; font-style: normal; text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: 3px; }
+.home-faction-source summary:hover cite { color: currentColor; }
+.home-faction-source[open] summary { margin-bottom: 7px; }
+.home-faction-source>p { margin: 0; color: #8e8576; font: 14px/1.6 var(--sv-font-literary); }
+.home-faction-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid currentColor;
+  color: currentColor;
+  font: 12px var(--mono);
+  letter-spacing: .7px;
+}
+.home-faction-link:hover { color: var(--ink); }
+@media (max-width: 620px) {
+  .hero.home-welcome { min-height: 0; padding-bottom: 32px; }
+  .home-page > .section-block { padding-top: 38px; }
+  .home-welcome h1 { letter-spacing: .035em; }
+  .home-welcome h1 em { letter-spacing: 0; }
+  .home-welcome .button { font-size: 10px; letter-spacing: .035em; }
+  .home-faction-copy { padding: 15px; }
+  .home-page .home-faction-card .home-faction-copy h3 { font-size: clamp(20px, 5vw, 23px); }
+  .home-page .home-faction-card .home-faction-copy > .home-faction-quote { font-size: clamp(26px, 7vw, 32px); line-height: 1.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-welcome .button { transition: none; }
+}
+
+.site-header { position: relative; top: auto; z-index: 10; margin-bottom: calc(-1 * var(--sv-header-overlap)); border-bottom: 0; background-color: transparent; background-image: none; backdrop-filter: none; }
+.site-header .main-nav { position: relative; }
+.site-header .main-nav a.active::after { display: none; }
+.main-nav-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent, #c65a36);
+  pointer-events: none;
+  transition: width 300ms ease, transform 300ms ease, opacity 120ms ease;
+}
+.site-shell > main.home-page { padding-top: var(--sv-header-overlap); }
+.site-shell > main.content-page { padding-top: calc(var(--sv-header-overlap) + 58px); }
+.site-shell > main.archive-timeline { padding-top: calc(var(--sv-header-overlap) + 52px); }
+.site-shell > main,
+.auth-page { animation: page-arrive 320ms cubic-bezier(.2,.7,.25,1) both; }
+@keyframes page-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 620px) {
+  :root { --sv-header-overlap: 124px; }
+  .site-shell > main.content-page { padding-top: calc(var(--sv-header-overlap) + 49px); }
+  .site-shell > main.profile-page { padding-top: calc(var(--sv-header-overlap) + 58px); }
+  .site-shell > main.archive-timeline { padding-top: calc(var(--sv-header-overlap) + 30px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-shell > main,
+  .auth-page { animation: none; }
+  .main-nav-indicator { transition: none; }
+}

@@ -19,7 +19,7 @@ after(() => {
   fs.rmSync(dataDirectory, { recursive: true, force: true })
 })
 
-test('account registration, bcrypt migration, refresh rotation, profile, password and match history', async () => {
+test('account registration, bcrypt migration, refresh rotation, profile and password', async () => {
   const registered = await auth.register({ username: 'Archivist_1', email: 'Pilot@Sector.test', password: 'correct-horse-41', faction: 'tau' })
   assert.equal(registered.status, 201)
   assert.equal(registered.user.username, 'archivist_1')
@@ -51,22 +51,6 @@ test('account registration, bcrypt migration, refresh rotation, profile, passwor
   assert.equal((await auth.login({ username: 'field_commander', password: 'correct-horse-41' })).status, 401)
   assert.equal((await auth.login({ username: 'field_commander', password: 'new-strong-password' })).status, 200)
   assert.equal((await auth.changePassword(registered.user.id, { currentPassword: 'bad', newPassword: 'another-strong-password' })).status, 401)
-
-  await repository.recordMatchHistory({
-    id: 'profile-history-match', status: 'finished', winnerIndex: 0, winMethod: 'surrender', winReason: 'Соперник сдался.',
-    players: [{ userId: registered.user.id, username: 'field_commander', faction: 'orks' }, { userId: 'opponent', username: 'Rival', faction: 'tau' }],
-    startedAt: 1_000, finishedAt: 91_000, turn: 8, mapId: 'ash-wastes', mapName: 'Пепельные Пустоши',
-  })
-  await repository.recordMatchHistory({ id: 'profile-history-match', status: 'finished', winnerIndex: 0, players: [{ userId: registered.user.id }, { userId: 'opponent' }] })
-  const history = await repository.getMatchHistory(registered.user.id)
-  const stats = await repository.getMatchStats(registered.user.id)
-  assert.equal(history.length, 1, 'a finished match is written once by match id')
-  assert.equal(history[0].winnerUserId, registered.user.id)
-  assert.equal(history[0].mapId, 'ash-wastes')
-  assert.equal(history[0].durationSeconds, 90)
-  assert.deepEqual({ matches: stats.matches, wins: stats.wins, losses: stats.losses, winRate: stats.winRate, favoriteFaction: stats.favoriteFaction }, {
-    matches: 1, wins: 1, losses: 0, winRate: 100, favoriteFaction: 'orks',
-  })
 
   const salt = 'legacy-salt'
   const legacyHash = (await scrypt('legacy-password', salt, 64)).toString('hex')

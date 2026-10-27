@@ -10,7 +10,7 @@ export async function requireAuth(req, res, next) {
   req.user = {
     ...claims, id: currentUser.id, username: currentUser.username, email: currentUser.email || '',
     faction: currentUser.faction || 'imperium', favoriteFaction: currentUser.favoriteFaction || currentUser.faction || 'imperium',
-    avatarId: currentUser.avatarId || 'default', onlineIdentity: currentUser.onlineIdentity || {},
+    avatarId: currentUser.avatarId || 'default',
     createdAt: currentUser.createdAt || null,
   }
   next()

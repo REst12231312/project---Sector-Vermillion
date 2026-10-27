@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { changePassword, login, logout, refreshSession, register, updateProfile } from '../services/authService.js'
-import { getMatchHistory, getMatchStats } from '../services/userRepository.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 const router = Router()
@@ -45,12 +44,8 @@ router.post('/logout', async (req, res) => {
   res.json({ status: 'logged-out' })
 })
 router.get('/me', requireAuth, (req, res) => res.json({ user: req.user }))
-router.get('/profile', requireAuth, async (req, res) => {
-  const stats = await getMatchStats(req.user.sub)
-  res.json({ user: req.user, stats })
-})
+router.get('/profile', requireAuth, (req, res) => res.json({ user: req.user }))
 router.put('/profile', requireAuth, async (req, res) => sendSession(res, await updateProfile(req.user.sub, req.body || {})))
 router.put('/password', requireAuth, async (req, res) => sendSession(res, await changePassword(req.user.sub, req.body || {})))
-router.get('/matches', requireAuth, async (req, res) => res.json({ matches: await getMatchHistory(req.user.sub, { limit: req.query.limit }) }))
 
 export default router

@@ -11,9 +11,9 @@ const ACCESS_TOKEN_LIFETIME_SECONDS = 15 * 60
 const REFRESH_TOKEN_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000
 const passwordHashRounds = Number(process.env.BCRYPT_ROUNDS || 12)
 
-export const publicUser = ({ id, username, email, faction, favoriteFaction, avatarId, onlineIdentity, createdAt }) => ({
+export const publicUser = ({ id, username, email, faction, favoriteFaction, avatarId, createdAt }) => ({
   id, username, email: email || '', faction: faction || 'imperium', favoriteFaction: favoriteFaction || faction || 'imperium',
-  avatarId: avatarId || 'default', chapter: onlineIdentity?.chapter || '', legion: onlineIdentity?.legion || '', createdAt: createdAt || null,
+  avatarId: avatarId || 'default', createdAt: createdAt || null,
 })
 
 export function makeToken(user) {

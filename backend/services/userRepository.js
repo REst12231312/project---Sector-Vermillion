@@ -4,11 +4,8 @@ import {
   findUser as findJsonUser,
   findUserById as findJsonUserById,
   readUsers,
-  readMatchHistoryRecords,
-  updateUserOnlineIdentity as updateJsonUserOnlineIdentity,
   usernameExists as jsonUsernameExists,
   writeUsers,
-  writeMatchHistoryRecords,
 } from '../storage.js'
 
 let clientPromise
@@ -28,8 +25,6 @@ async function collections() {
       db.collection('users').createIndex({ username: 1 }, { unique: true }),
       db.collection('users').createIndex({ email: 1 }, { unique: true, sparse: true }),
       db.collection('users').createIndex({ refreshTokenHash: 1 }, { sparse: true }),
-      db.collection('matchHistory').createIndex({ matchId: 1 }, { unique: true }),
-      db.collection('matchHistory').createIndex({ 'participants.userId': 1, playedAt: -1 }),
     ]).then(async () => {
       if (await db.collection('users').estimatedDocumentCount() !== 0) return
       const legacyUsers = readUsers()
@@ -37,14 +32,10 @@ async function collections() {
       await db.collection('users').insertMany(legacyUsers.map((user) => ({
         ...user, favoriteFaction: user.favoriteFaction || user.faction || 'imperium', avatarId: user.avatarId || 'default',
       })), { ordered: false })
-      const legacyHistory = [...readMatchHistoryRecords(), ...legacyUsers.flatMap((user) => user.matchHistory || [])]
-      if (legacyHistory.length) await db.collection('matchHistory').bulkWrite(legacyHistory.map((entry) => ({
-        updateOne: { filter: { matchId: entry.matchId }, update: { $setOnInsert: entry }, upsert: true },
-      })), { ordered: false })
     }).catch((error) => { indexPromise = null; throw error })
   }
   await indexPromise
-  return { users: db.collection('users'), matchHistory: db.collection('matchHistory') }
+  return { users: db.collection('users') }
 }
 
 function normalizedUser(user) {
@@ -150,78 +141,4 @@ export async function updateUserFaction(id, faction) {
   return updateUser(id, { faction, favoriteFaction: faction })
 }
 
-export async function updateUserOnlineIdentity(id, identity) {
-  const user = await findUserById(id)
-  if (!user) return null
-  const onlineIdentity = { ...(user.onlineIdentity || {}), ...identity }
-  if (!process.env.MONGODB_URI) return updateJsonUserOnlineIdentity(id, identity)
-  return updateUser(id, { onlineIdentity })
-}
-
 export async function savePasswordHash(id, passwordHash) { return updateUser(id, { passwordHash, passwordScheme: 'bcrypt', salt: undefined }) }
-
-export async function recordMatchHistory(match) {
-  const db = await collections()
-  const playedAt = new Date(match.finishedAt || match.updatedAt || Date.now())
-  const winner = match.players?.[match.winnerIndex]
-  const entry = {
-    matchId: match.id,
-    participants: (match.players || []).map((player) => ({ userId: player.userId, username: player.username, faction: player.faction })),
-    winnerUserId: winner?.userId || null,
-    winMethod: match.winMethod || match.winReason || 'unknown',
-    durationSeconds: Math.max(0, Math.floor(((match.finishedAt || match.updatedAt || Date.now()) - (match.startedAt || match.createdAt || Date.now())) / 1000)),
-    turns: match.turn || 0,
-    mapId: match.mapId || 'sector-crossing',
-    mapName: match.mapName || match.mapId || 'Перекрёсток Сектора',
-    playedAt,
-  }
-  if (!db) {
-    const entries = readMatchHistoryRecords()
-    if (!entries.some((item) => item.matchId === entry.matchId)) {
-      entries.push(entry)
-      writeMatchHistoryRecords(entries)
-    }
-    return entry
-  }
-  try { await db.matchHistory.updateOne({ matchId: entry.matchId }, { $setOnInsert: entry }, { upsert: true }) }
-  catch (error) { if (error?.code !== 11000) throw error }
-  return entry
-}
-
-export async function getMatchHistory(userId, { limit = 50 } = {}) {
-  const db = await collections()
-  const cappedLimit = Math.min(100, Math.max(1, Number(limit) || 50))
-  let entries
-  if (!db) entries = readMatchHistoryRecords().filter((item) => item.participants.some((participant) => participant.userId === userId))
-  else entries = await db.matchHistory.find({ 'participants.userId': userId }).sort({ playedAt: -1 }).limit(cappedLimit).toArray()
-  entries = entries.sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt)).slice(0, cappedLimit)
-  return entries.map((item) => ({ ...item, id: item.matchId, playedAt: new Date(item.playedAt).toISOString() }))
-}
-
-export async function getMatchStats(userId) {
-  const db = await collections()
-  if (db) {
-    const [summaryRows, factionRows] = await Promise.all([
-      db.matchHistory.aggregate([
-        { $match: { 'participants.userId': userId } },
-        { $group: { _id: null, matches: { $sum: 1 }, wins: { $sum: { $cond: [{ $eq: ['$winnerUserId', userId] }, 1, 0] } } } },
-      ]).toArray(),
-      db.matchHistory.aggregate([
-        { $unwind: '$participants' }, { $match: { 'participants.userId': userId } },
-        { $group: { _id: '$participants.faction', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }, { $limit: 1 },
-      ]).toArray(),
-    ])
-    const matches = summaryRows[0]?.matches || 0, wins = summaryRows[0]?.wins || 0
-    return { matches, wins, losses: matches - wins, winRate: matches ? Math.round((wins / matches) * 100) : 0, favoriteFaction: factionRows[0]?._id || null }
-  }
-  const history = readMatchHistoryRecords().filter((match) => match.participants.some((participant) => participant.userId === userId))
-  const wins = history.filter((match) => match.winnerUserId === userId).length
-  const losses = history.length - wins
-  const factionCounts = new Map()
-  for (const match of history) {
-    const faction = match.participants.find((participant) => participant.userId === userId)?.faction
-    if (faction) factionCounts.set(faction, (factionCounts.get(faction) || 0) + 1)
-  }
-  const favoriteFaction = [...factionCounts].sort((a, b) => b[1] - a[1])[0]?.[0] || null
-  return { matches: history.length, wins, losses, winRate: history.length ? Math.round((wins / history.length) * 100) : 0, favoriteFaction }
-}

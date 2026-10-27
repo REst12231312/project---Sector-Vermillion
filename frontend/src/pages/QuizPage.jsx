@@ -181,7 +181,7 @@ export default function QuizPage() {
   if (selectedLevel && level && unlocked) {
     const scene = level.scenes[sceneIndex]
     const alreadyComplete = completedLevels.includes(level.id)
-    return <main className={`content-page campaign-page ${faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : faction === 'tau' ? 'tau-theme' : ''}`}>
+    return <main className={`content-page campaign-page ${faction === 'imperium' ? 'imperium-theme' : faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : 'tau-theme'}`}>
       {achievementPopup && <aside className="achievement-toast" role="status" aria-live="polite"><span className="achievement-icon">{achievementPopup.icon}</span><div><span className="eyebrow">НОВОЕ БОЕВОЕ ОТЛИЧИЕ</span><b>{achievementPopup.name}</b><small>{achievementPopup.description}</small></div><button type="button" aria-label="Закрыть уведомление" onClick={() => setAchievementPopup(null)}>×</button></aside>}
       <button className="back-link campaign-back" type="button" onClick={leaveLevel}>← Карта кампании</button>
       <p className="eyebrow">ОПЕРАЦИЯ {level.number} · {level.subtitle.toUpperCase()}</p>
@@ -206,7 +206,7 @@ export default function QuizPage() {
     </main>
   }
 
-  return <main className={`content-page campaign-page campaign-overview ${faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : faction === 'tau' ? 'tau-theme' : ''}`}>
+  return <main className={`content-page campaign-page campaign-overview ${faction === 'imperium' ? 'imperium-theme' : faction === 'chaos' ? 'chaos-theme' : faction === 'orks' ? 'orks-theme' : 'tau-theme'}`}>
     <Link className="back-link" to="/">← На главную</Link>
     {campaignMessage && <p className="campaign-alignment-notice" role="status">{campaignMessage}</p>}
     <p className="eyebrow">КАМПАНИЯ · {factionTitle}</p>

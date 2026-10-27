@@ -6,8 +6,6 @@ import { randomBytes } from 'node:crypto'
 const dataDirectory = process.env.SECTOR_DATA_DIRECTORY || path.join(path.dirname(fileURLToPath(import.meta.url)), 'data')
 const progressPath = path.join(dataDirectory, 'progress.json')
 const usersPath = path.join(dataDirectory, 'users.json')
-const onlineStatePath = path.join(dataDirectory, 'online-state.json')
-const matchHistoryPath = path.join(dataDirectory, 'match-history.json')
 function readJson(filePath, fallback) { try { return JSON.parse(fs.readFileSync(filePath, 'utf8')) } catch { return fallback } }
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
@@ -24,12 +22,8 @@ export function saveProgress(profileId, state) {
   writeJson(progressPath, progress)
   return state
 }
-export function readOnlineState() { return readJson(onlineStatePath, { sessions: [], waitingPlayers: [], rooms: [] }) }
-export function saveOnlineState(state) { writeJson(onlineStatePath, state); return state }
 export function readUsers() { return readJson(usersPath, []) }
 export function writeUsers(users) { writeJson(usersPath, users); return users }
-export function readMatchHistoryRecords() { return readJson(matchHistoryPath, []) }
-export function writeMatchHistoryRecords(entries) { writeJson(matchHistoryPath, entries); return entries }
 export function findUser(username) { return readUsers().find((user) => user.username === username) ?? null }
 export function findUserById(id) { return readUsers().find((user) => user.id === id) ?? null }
 export function createUser(user) { const users = readUsers(); users.push(user); writeJson(usersPath, users) }
@@ -38,14 +32,6 @@ export function updateUserFaction(id, faction) {
   const user = users.find((candidate) => candidate.id === id)
   if (!user) return null
   user.faction = faction
-  writeJson(usersPath, users)
-  return user
-}
-export function updateUserOnlineIdentity(id, identity) {
-  const users = readUsers()
-  const user = users.find((candidate) => candidate.id === id)
-  if (!user) return null
-  user.onlineIdentity = { ...(user.onlineIdentity || {}), ...identity }
   writeJson(usersPath, users)
   return user
 }
