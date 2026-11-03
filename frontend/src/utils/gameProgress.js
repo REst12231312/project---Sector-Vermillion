@@ -67,10 +67,12 @@ export function getProgress() {
       discoveredEntries: Array.isArray(saved.discoveredEntries) ? saved.discoveredEntries : [],
       readEntries: Array.isArray(saved.readEntries) ? saved.readEntries : [],
       completedLevels: Array.isArray(saved.completedLevels) ? saved.completedLevels : [],
+      rewardGrants: Array.isArray(saved.rewardGrants) ? saved.rewardGrants : [],
+      tacticalCampaigns: saved.tacticalCampaigns && typeof saved.tacticalCampaigns === 'object' ? saved.tacticalCampaigns : {},
       interceptedLore: saved.interceptedLore && typeof saved.interceptedLore === 'object' ? saved.interceptedLore : {},
     }
   } catch {
-    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [], completedLevels: [], interceptedLore: {} }
+    return { xp: 0, studiedFactions: [], dailyMission: null, achievements: [], answeredQuestions: [], discoveredEntries: [], readEntries: [], completedLevels: [], rewardGrants: [], tacticalCampaigns: {}, interceptedLore: {} }
   }
 }
 
@@ -84,6 +86,8 @@ export function applyServerProgress(progress) {
     discoveredEntries: Array.isArray(progress.discoveredEntries) ? progress.discoveredEntries : [],
     readEntries: Array.isArray(progress.readEntries) ? progress.readEntries : [],
     completedLevels: Array.isArray(progress.completedLevels) ? progress.completedLevels : [],
+    rewardGrants: Array.isArray(progress.rewardGrants) ? progress.rewardGrants : [],
+    tacticalCampaigns: progress.tacticalCampaigns && typeof progress.tacticalCampaigns === 'object' ? progress.tacticalCampaigns : {},
     interceptedLore: progress.interceptedLore && typeof progress.interceptedLore === 'object' ? progress.interceptedLore : {},
   })
 }

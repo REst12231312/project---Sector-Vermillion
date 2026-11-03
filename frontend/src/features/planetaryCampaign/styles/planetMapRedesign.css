@@ -1,0 +1,433 @@
+.planet-map-svg {
+  --control-enemy-pattern: #b27660;
+  --control-contested-pattern: #d0aa69;
+  --control-player-pattern: #c5ca92;
+  --control-contested-fill: #51402b;
+  --control-contested-stroke: #ae8854;
+  --control-enemy-fill: #342923;
+  --control-enemy-stroke: #795c4e;
+  --frontline-color: #ca8065;
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 10 / 7;
+  color: var(--map-accent);
+  background: #0a0b09;
+  touch-action: pan-y;
+}
+
+.planet-campaign-layout {
+  grid-template-columns: minmax(0, 7fr) minmax(285px, 3fr);
+  gap: 18px;
+  margin-top: 18px;
+  align-items: stretch;
+}
+
+.planet-command-hud {
+  width: min(100%, 1500px);
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: auto minmax(170px, .75fr) minmax(220px, 1.4fr) minmax(160px, .65fr);
+  align-items: center;
+  gap: 18px;
+  margin: 0 auto 15px;
+  padding: 10px 14px;
+  border: 1px solid #4a4333;
+  border-left: 3px solid #a28750;
+  background: linear-gradient(105deg, #1b1b15, #12130f 58%, #181713);
+  box-shadow: 0 8px 28px #0004;
+}
+.planet-hud-return { color: #cbb77e; font: 9px var(--mono); text-decoration: none; white-space: nowrap; }
+.planet-hud-return:hover { color: #fff0c6; }
+.planet-hud-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.planet-hud-sigil { display: grid; place-items: center; width: 39px; height: 39px; border: 1px solid #7f6a41; color: #d5bd7e; font: 20px var(--display); transform: rotate(45deg); }
+.planet-hud-sigil i { font-style: normal; transform: rotate(-45deg); }
+.planet-hud-identity p,
+.planet-hud-operation > span,
+.planet-hud-progress > div > span { margin: 0 0 4px; color: #aaa18b; font: 8px var(--mono); letter-spacing: .65px; }
+.planet-hud-identity h1 { margin: 0; color: #eee6d2; font: 600 22px/1 var(--display); text-transform: uppercase; }
+.planet-hud-operation { display: grid; gap: 4px; min-width: 0; padding-inline: 17px; border-left: 1px solid #39362c; }
+.planet-hud-operation b { overflow: hidden; color: #e3d2a6; font: 600 15px/1.1 var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.planet-hud-operation small { overflow: hidden; color: #8f8d81; font: 8px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
+.planet-hud-progress { display: grid; gap: 5px; }
+.planet-hud-progress > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.planet-hud-progress > div > span { margin: 0; }
+.planet-hud-progress > div > b { color: #e0c57d; font: 600 17px var(--display); }
+.planet-hud-progress > div > b small { color: #8d8a7d; font: 9px var(--mono); }
+.planet-hud-progress > i { display: block; height: 4px; background: #333229; }
+.planet-hud-progress > i em { display: block; height: 100%; background: linear-gradient(90deg, #817344, #c1a65e); transition: width .25s ease; }
+.planet-hud-progress > small { color: #858278; font: 7px var(--mono); letter-spacing: .4px; }
+
+.planet-map-panel,
+.planet-territory-panel {
+  border-color: #37352c;
+  background: #12130f;
+}
+
+.planet-map-panel { padding: 10px; }
+.planet-map-frame {
+  height: clamp(460px, 61vh, 760px);
+  min-height: 460px;
+  aspect-ratio: auto;
+  border-color: #403a2f;
+  background: #0a0b09;
+  box-shadow: inset 0 0 36px #0009;
+}
+
+.planet-map-space { fill: #0a0b09; }
+.planet-surface-shadow { fill: #000; stroke: #000; stroke-width: 14; opacity: .48; }
+.planet-surface { stroke: var(--map-edge); stroke-width: 1.7; }
+.planet-atmosphere-rim { fill: none; stroke-width: 10; opacity: .2; pointer-events: none; }
+.planet-surface-texture { opacity: .38; pointer-events: none; }
+.planet-globe-terminator { opacity: .82; pointer-events: none; }
+.planet-globe-grid { fill: none; stroke: #d8c9a1; stroke-width: .7; stroke-dasharray: 2 7; opacity: .13; pointer-events: none; }
+.planet-coastline { stroke: var(--map-edge); stroke-width: 1.1; opacity: .56; }
+
+.planet-geography { pointer-events: none; }
+.planet-contours path {
+  fill: none;
+  stroke: var(--map-relief);
+  stroke-width: .85;
+  stroke-dasharray: 2 4;
+  opacity: .34;
+  vector-effect: non-scaling-stroke;
+}
+.planet-mountains path {
+  fill: none;
+  stroke: var(--map-relief);
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .66;
+  vector-effect: non-scaling-stroke;
+}
+.planet-mountains .mountain-shadow { stroke: #100f0c; stroke-width: 2.8; opacity: .35; }
+.planet-crater circle:first-child { fill: #15130f; stroke: var(--map-ruin); stroke-width: .9; opacity: .48; }
+.planet-crater circle:nth-child(2) { fill: none; stroke: var(--map-ruin); stroke-width: .7; stroke-dasharray: 1 2; opacity: .52; }
+.planet-crater path { fill: none; stroke: #d0b58c; stroke-width: .6; opacity: .23; }
+.planet-roads path {
+  fill: none;
+  stroke: var(--map-road);
+  stroke-width: 1.15;
+  stroke-dasharray: 3 4;
+  stroke-linecap: round;
+  opacity: .52;
+  vector-effect: non-scaling-stroke;
+}
+.planet-settlements { color: var(--map-ruin); }
+.planet-wasteland path { fill: var(--map-waste); fill-opacity: .105; stroke: var(--map-terrain-stroke); stroke-opacity: .22; stroke-width: .8; stroke-dasharray: 2 4; }
+.planet-erosion-lines { fill: none; stroke: #c8a87b; stroke-width: .9; stroke-dasharray: 1 4; opacity: .34; }
+.planet-fortifications { fill: none; stroke: #d0b67f; stroke-width: 1.7; stroke-dasharray: 8 3 1 3; opacity: .56; }
+.terrain-settlement { opacity: .82; }
+.terrain-settlement path { fill: #1b1712; stroke: currentColor; stroke-width: .9; vector-effect: non-scaling-stroke; }
+.terrain-settlement text { fill: #c0aa88; stroke: #17130f; stroke-width: 2.2px; paint-order: stroke; font: 6px var(--mono); letter-spacing: .55px; opacity: .8; }
+.planet-battle-scars path { fill: none; stroke: #b17d68; stroke-width: 1.2; stroke-dasharray: 1 5; opacity: .28; }
+.planet-geography-siege .planet-contours path { stroke-dasharray: 7 2 1 2; opacity: .28; }
+.planet-geography-siege .planet-roads path { stroke-dasharray: 8 3; opacity: .43; }
+.planet-geography-siege .terrain-settlement { opacity: .68; }
+
+.planet-territory { cursor: pointer; outline: none; }
+.planet-territory-shape {
+  fill-opacity: .25;
+  stroke-width: 1.15;
+  vector-effect: non-scaling-stroke;
+  transition: fill-opacity .18s ease, stroke .18s ease, filter .18s ease;
+}
+.planet-territory.control-enemy .planet-territory-shape { fill: var(--control-enemy-fill); stroke: var(--control-enemy-stroke); }
+.planet-territory.control-contested .planet-territory-shape { fill: var(--control-contested-fill); stroke: var(--control-contested-stroke); }
+.planet-territory.control-player .planet-territory-shape { fill: var(--control-player-fill); stroke: var(--control-player-stroke); }
+.planet-territory-pattern { opacity: .23; pointer-events: none; }
+.planet-territory.control-enemy .planet-territory-pattern,
+.planet-territory.control-contested .planet-territory-pattern,
+.planet-territory.control-player .planet-territory-pattern { opacity: .22; }
+.planet-territory.availability-locked { opacity: .83; }
+.planet-territory.availability-locked .planet-territory-shape { stroke-dasharray: 2 3; }
+.planet-territory.is-selected .planet-territory-shape,
+.planet-territory.is-hovered .planet-territory-shape,
+.planet-territory:focus-visible .planet-territory-shape {
+  fill-opacity: .58;
+  stroke: var(--map-accent);
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--map-accent) 30%, transparent));
+}
+.planet-territory-label {
+  fill: #e0d5bc;
+  stroke: #17150f;
+  stroke-width: 3px;
+  paint-order: stroke;
+  font: 700 16px var(--mono);
+  letter-spacing: .7px;
+  opacity: .92;
+  pointer-events: none;
+  transition: fill .16s ease, opacity .16s ease;
+}
+.planet-territory-label.is-selected,
+.planet-territory-label.is-hovered { fill: #fff0c8; opacity: 1; font-size: 18px; }
+.planet-landmark-labels { fill: #d4c09a; font: 600 10px var(--mono); letter-spacing: .8px; opacity: .72; }
+.planet-landmark-labels text { stroke: #17150f; stroke-width: 2.4px; paint-order: stroke; }
+.planet-map-scene[data-lod='overview'] .planet-territory-label { opacity: .78; font-size: 14px; }
+.planet-map-scene[data-lod='overview'] .planet-landmark-labels { opacity: .28; }
+.planet-map-scene[data-lod='overview'] .planet-settlements { opacity: .12; }
+.planet-map-scene[data-lod='overview'] .planet-craters { opacity: .4; }
+
+.planet-frontline-underlay,
+.planet-frontline,
+.planet-frontline-dashes { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; pointer-events: none; }
+.planet-frontline-underlay { stroke: #160f0d; stroke-width: 7; opacity: .8; }
+.planet-frontline { stroke: var(--frontline-color); stroke-width: 2.5; stroke-dasharray: 1 5; }
+.planet-frontline-dashes { stroke: #e4b18b; stroke-width: .75; stroke-dasharray: 7 12; opacity: .72; }
+.planet-frontline-segment marker path,
+marker path { fill: var(--frontline-color); stroke: #160f0d; stroke-width: .5; }
+.planet-frontline-segment[class*='frontier-player-'] .planet-frontline { stroke: var(--control-player-stroke); stroke-dasharray: 6 3; }
+.planet-frontline-segment[class*='frontier-contested-'] .planet-frontline { stroke: var(--control-contested-stroke); stroke-dasharray: 2 4; }
+.planet-frontline-segment[class*='frontier-player-'] .planet-frontline-dashes { stroke: #e3d99b; }
+.planet-frontline-segment[class*='frontier-contested-'] .planet-frontline-dashes { stroke: #eed0a0; }
+
+.planet-strategic-objects { pointer-events: none; }
+.planet-strategic-marker { color: #c7b384; opacity: .7; transition: opacity .16s ease; }
+.planet-strategic-marker { pointer-events: all; cursor: pointer; outline: none; }
+.planet-strategic-marker:hover,
+.planet-strategic-marker:focus-visible { opacity: 1; filter: drop-shadow(0 0 4px #d7bf7d99); }
+.planet-strategic-marker:hover .planet-marker-halo,
+.planet-strategic-marker:focus-visible .planet-marker-halo { stroke: #e0c77e; stroke-width: 1.8; }
+.planet-strategic-marker.is-region-selected { opacity: 1; }
+.planet-marker-halo { fill: #11120fe8; stroke: #8e7b51; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.planet-marker-glyph { stroke: currentColor; vector-effect: non-scaling-stroke; }
+.marker-artillery { color: #c68c72; }
+.marker-fortress { color: #c1ad78; }
+.marker-supply { color: #a9b08a; }
+.marker-command { color: #d2bd81; }
+.planet-strategic-marker.is-destroyed { color: #82736c; opacity: .5; }
+.planet-marker-destroyed-mark { fill: none; stroke: #d0a08b; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+
+.planet-map-coordinate { fill: #aea18a; font: 8px var(--mono); letter-spacing: .9px; opacity: .75; }
+.planet-map-tools { border-color: #514731; background: #10110eeb; backdrop-filter: blur(4px); }
+.planet-map-tools button { border-color: #514833; background: #1b1a15; color: #d4bf83; transition: background .15s, border-color .15s; }
+.planet-map-tools button:focus-visible,
+.planet-panel-title > button:focus-visible,
+.planet-current-mission button:focus-visible { outline: 2px solid var(--map-accent); outline-offset: 2px; }
+.planet-map-tooltip { border-color: #5e533c; background: #10110ef2; }
+.planet-map-legend { gap: 8px 14px; color: #b7b2a4; }
+.legend-territory { position: relative; border-radius: 1px; }
+.legend-territory.enemy { background: repeating-linear-gradient(135deg, #49362c 0 2px, #31251f 2px 4px); border-color: #795c4e; }
+.legend-territory.contested { background: repeating-linear-gradient(45deg, #5b472d 0 2px, #352d22 2px 4px); border-color: #ae8854; }
+.legend-territory.player { background: repeating-linear-gradient(135deg, #465037 0 2px, #303728 2px 4px); border-color: #929b68; }
+.legend-frontline { border-color: #ca8065; }
+
+.planet-territory-panel { position: sticky; top: 14px; max-height: calc(100vh - 28px); min-height: 100%; padding: 18px; border-top: 2px solid #756444; scrollbar-width: thin; }
+.planet-territory-panel.is-empty { display: grid; align-content: start; gap: 11px; }
+.planet-campaign-summary { display: grid; gap: 16px; padding: 15px 0; border-block: 1px solid #34342c; }
+.planet-summary-total { display: flex; align-items: baseline; gap: 10px; }
+.planet-summary-total b { color: #e4d1a3; font: 600 38px/1 var(--display); }
+.planet-summary-total span { color: #a7a18f; font: 9px var(--mono); letter-spacing: .7px; }
+.planet-summary-controls { display: grid; gap: 9px; }
+.planet-summary-controls span { display: flex; align-items: center; gap: 8px; color: #bdb7a8; font-size: 12px; }
+.planet-summary-controls i { width: 8px; height: 8px; border: 1px solid currentColor; transform: rotate(45deg); }
+.planet-summary-controls i.control-enemy { color: #c58871; }
+.planet-summary-controls i.control-contested { color: #d0ae6c; }
+.planet-summary-controls i.control-player { color: #adbc83; }
+.planet-summary-controls b { margin-left: auto; color: #e1d8c3; font: 600 13px var(--mono); }
+.planet-summary-progress { display: grid; grid-template-columns: 1fr auto; gap: 8px; color: #aaa592; font: 9px var(--mono); }
+.planet-summary-progress b { color: #e0c57d; font-size: 12px; }
+.planet-summary-progress b small { color: #8f8c80; }
+.planet-summary-progress > i { grid-column: 1 / -1; height: 3px; background: #333229; }
+.planet-summary-progress > i em { display: block; height: 100%; background: linear-gradient(90deg, #817344, #c1a65e); }
+.planet-panel-title { align-items: start; }
+.planet-panel-title h2,
+.planet-territory-panel.is-empty h2 { font-size: 24px; line-height: 1.08; }
+.planet-panel-kicker { letter-spacing: 1px; }
+.planet-panel-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; margin: 8px 0 13px; font-size: 9px; }
+.control-label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.control-label i { width: 7px; height: 7px; border: 1px solid currentColor; transform: rotate(45deg); }
+.control-label.control-enemy { color: #c58871; }
+.control-label.control-contested { color: #d0ae6c; }
+.control-label.control-player { color: #adbc83; }
+.planet-panel-description { color: #c1bcae; font-size: 12px; }
+.planet-region-value { margin: 2px 0 12px; padding: 9px 10px; border-left: 2px solid #9b8051; background: #1b1a15; }
+.planet-region-value > span { color: #c5ad73; font: 9px var(--mono); letter-spacing: .6px; }
+.planet-region-value p { margin: 5px 0 0; color: #b6b1a4; font-size: 11px; line-height: 1.5; }
+.planet-region-progress { margin: 10px 0 13px; }
+.planet-region-progress > div { align-items: baseline; }
+.planet-region-progress b { font-size: 13px; }
+.planet-region-progress b small { color: #8f8c80; font-size: 10px; }
+.planet-region-progress > i { height: 3px; }
+.planet-region-operations { padding: 0; border: 0; }
+.planet-current-mission { margin: 0; padding: 12px; border: 1px solid #746440; background: linear-gradient(130deg, #28251a, #171811); }
+.planet-current-mission .planet-panel-kicker { margin-bottom: 6px; }
+.planet-current-mission h3 { margin: 0; color: #eee3c7; font: 600 18px/1.12 var(--display); text-transform: uppercase; }
+.planet-current-mission > p:not(.planet-panel-kicker) { margin: 7px 0 10px; color: #aca99d; font-size: 11px; line-height: 1.5; }
+.planet-current-mission > button { width: 100%; padding: 10px 11px; border: 1px solid #8b7548; background: #302a1c; color: #e0ca91; font: 9px var(--mono); text-align: left; cursor: pointer; }
+.planet-current-mission > button:hover { border-color: #c8ae6d; background: #39311f; color: #fff0c6; }
+.planet-current-mission-complete { color: #b8b493; font: 10px/1.55 var(--mono); }
+.planet-operation-log,
+.planet-region-bonuses { margin-top: 10px; border-top: 1px solid #34342c; }
+.planet-operation-log summary,
+.planet-region-bonuses summary { display: flex; justify-content: space-between; gap: 10px; padding: 10px 1px; color: #c6bd9f; font: 9px var(--mono); letter-spacing: .45px; cursor: pointer; list-style: none; }
+.planet-operation-log summary::-webkit-details-marker,
+.planet-region-bonuses summary::-webkit-details-marker { display: none; }
+.planet-operation-log summary::before,
+.planet-region-bonuses summary::before { content: '+'; margin-right: 2px; color: #b79b60; }
+.planet-operation-log[open] summary::before,
+.planet-region-bonuses[open] summary::before { content: '−'; }
+.planet-operation-log summary span,
+.planet-region-bonuses summary span { margin-left: auto; color: #8f8b7d; }
+.planet-operation-log .territory-mission-list { gap: 5px; padding-bottom: 9px; }
+.planet-region-operations .territory-mission-card { grid-template-columns: 26px minmax(0, 1fr); border-color: #35352e; background: #181914; }
+.planet-region-operations .territory-mission-card.mission-available,
+.planet-region-operations .territory-mission-card.mission-in_progress { border-left: 2px solid #ad8c50; }
+.planet-region-operations .territory-mission-card.mission-locked { opacity: .55; }
+.planet-region-operations .territory-mission-card.mission-completed { opacity: .75; }
+.planet-region-operations .territory-mission-card > button { grid-column: 2; }
+.planet-region-bonuses { display: block; }
+.planet-region-bonuses > p { margin: 0 0 7px; padding: 7px 9px; border-left: 2px solid #86744b; background: #1a1914; color: #c0b79c; font-size: 10px; line-height: 1.5; }
+.planet-panel-empty { margin: 8px 0; color: #a9a69a; font-size: 11px; line-height: 1.5; }
+.planet-panel-empty-coordinate { margin-top: auto; padding-top: 18px; border-top: 1px solid #33332b; color: #79796f; font: 8px var(--mono); letter-spacing: 1px; }
+
+.planet-map-scene,
+.planet-territory-shape,
+.planet-strategic-marker,
+.planet-territory-panel,
+.planet-map-tools button { transition-duration: .18s; }
+
+.planet-era-drawer { width: min(100%, 1500px); margin: 15px auto 0; border-top: 1px solid #38362d; }
+.planet-era-drawer > summary { display: flex; justify-content: space-between; gap: 12px; padding: 13px 3px; color: #c8bb96; font: 9px var(--mono); letter-spacing: .7px; cursor: pointer; list-style: none; }
+.planet-era-drawer > summary::-webkit-details-marker { display: none; }
+.planet-era-drawer > summary::before { content: '+'; color: #b69b60; }
+.planet-era-drawer[open] > summary::before { content: '−'; }
+.planet-era-drawer > summary span { margin-left: auto; color: #77766d; font-size: 8px; }
+.planet-era-drawer .era-archive { margin: 0 auto 12px; }
+
+@media (min-width: 1500px) {
+  .planet-campaign-layout { grid-template-columns: minmax(0, 7fr) minmax(320px, 3fr); gap: 20px; }
+  .planet-map-panel { padding: 12px; }
+}
+
+@media (max-width: 1080px) {
+  .planet-campaign-layout { grid-template-columns: minmax(0, 7fr) minmax(260px, 3fr); gap: 12px; }
+  .planet-territory-panel { padding: 13px; }
+  .planet-command-hud { grid-template-columns: auto minmax(150px, .8fr) minmax(200px, 1.2fr) 145px; gap: 12px; }
+}
+
+@media (max-width: 800px) {
+  .planet-command-hud { grid-template-columns: auto minmax(0, 1fr) minmax(130px, .6fr); }
+  .planet-hud-operation { grid-column: 2 / 4; grid-row: 2; padding: 8px 0 0; border-top: 1px solid #39362c; border-left: 0; }
+  .planet-hud-progress { grid-column: 3; grid-row: 1; }
+  .planet-campaign-layout { grid-template-columns: minmax(0, 1fr); }
+  .planet-map-frame { height: auto; min-height: 0; aspect-ratio: 10 / 8; }
+  .planet-territory-panel { position: static; max-height: none; overflow: visible; }
+  .planet-territory-panel.is-empty { min-height: 150px; }
+}
+
+@media (max-width: 520px) {
+  .planet-command-hud { grid-template-columns: 1fr auto; gap: 9px 12px; padding: 10px; }
+  .planet-hud-return { grid-column: 1 / -1; }
+  .planet-hud-identity { grid-column: 1; grid-row: 2; }
+  .planet-hud-sigil { width: 31px; height: 31px; font-size: 16px; }
+  .planet-hud-identity p { font-size: 7px; }
+  .planet-hud-identity h1 { font-size: 19px; }
+  .planet-hud-progress { grid-column: 2; grid-row: 2; width: 125px; }
+  .planet-hud-operation { grid-column: 1 / -1; grid-row: 3; }
+  .planet-hud-progress > small { font-size: 6px; }
+  .planet-campaign-layout { gap: 10px; margin-top: 12px; }
+  .planet-map-panel { padding: 6px; }
+  .planet-map-frame { height: auto; min-height: 0; aspect-ratio: 10 / 8; }
+  .planet-map-svg { min-height: 0; }
+  .planet-map-tools { top: 6px; right: 6px; }
+  .planet-map-legend { padding: 8px 1px 1px; gap: 7px 10px; font-size: 9px; }
+  .planet-territory-panel { padding: 13px; }
+  .planet-panel-title h2 { font-size: 21px; }
+  .planet-current-mission h3 { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planet-map-redesign *, .planet-map-svg *, .planet-territory-panel * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+
+/* Flat Terra campaign map: the shared scene transform keeps geography, sectors and operations aligned. */
+.planet-campaign-layout { grid-template-columns: minmax(0, 3fr) minmax(285px, 1fr); align-items: stretch; }
+.planet-map-frame { height: auto; min-height: 0; aspect-ratio: 10 / 7; border: 0; background: #11130f; }
+.planet-map-frame { touch-action: pan-y; }
+.planet-map-svg.is-zoomed { touch-action: none; cursor: grab; }
+.planet-map-svg.is-panning { cursor: grabbing; }
+.planet-map-svg.is-panning .planet-map-scene { transition: none; }
+.planet-map-svg { aspect-ratio: 10 / 7; background: #11130f; }
+.campaign-map-strategy .planet-map-space { fill: #11130f; }
+.campaign-map-strategy .planet-surface { fill: #29291f; stroke: none; }
+.campaign-map-terrain-base { fill: var(--map-terrain-light); opacity: .7; }
+.campaign-map-terrain-base path:nth-child(2) { fill: var(--map-terrain-light); opacity: .63; }
+.campaign-map-terrain-base path:nth-child(3) { fill: var(--map-terrain-dark); opacity: .8; }
+.campaign-map-boundary { fill: none; stroke: #8d7d56; stroke-width: 1.1; stroke-dasharray: 3 5; opacity: .56; pointer-events: none; vector-effect: non-scaling-stroke; }
+.campaign-strategy-map .planet-globe-grid,
+.campaign-strategy-map .planet-globe-terminator,
+.campaign-strategy-map .planet-atmosphere-rim,
+.campaign-strategy-map .planet-coastline,
+.campaign-strategy-map .planet-surface-shadow { display: none; }
+.planet-campaign-layout .planet-map-panel { padding: 10px; border: 0; background: transparent; }
+.planet-campaign-layout .planet-map-caption { margin-bottom: 8px; }
+.planet-campaign-layout .planet-territory-panel { position: sticky; top: 14px; min-height: 100%; border: 0; border-top: 2px solid #756444; background: #141510; }
+.planet-campaign-layout .planet-territory-panel.is-empty { align-content: start; }
+.campaign-strategy-map .planet-territory-shape { stroke-width: 1.25; fill-opacity: .17; }
+.campaign-strategy-map .planet-territory.control-enemy .planet-territory-shape { fill: #8a5547; fill-opacity: .13; stroke: #a07b68; }
+.campaign-strategy-map .planet-territory.control-contested .planet-territory-shape { fill: #b08b4a; fill-opacity: .14; stroke: #c0a269; }
+.campaign-strategy-map .planet-territory.control-player .planet-territory-shape { fill: #71804e; fill-opacity: .14; stroke: #9ca477; }
+.campaign-strategy-map .planet-territory.is-selected .planet-territory-shape,
+.campaign-strategy-map .planet-territory.is-hovered .planet-territory-shape,
+.campaign-strategy-map .planet-territory:focus-visible .planet-territory-shape { fill-opacity: .29; stroke: #e0c47b; stroke-width: 2.2; }
+.campaign-strategy-map .planet-territory-pattern { opacity: .12; }
+.campaign-strategy-map .planet-territory.availability-locked { opacity: .78; }
+.campaign-strategy-map .planet-territory-label { fill: #e5d8bc; font-size: 16px; font-weight: 700; letter-spacing: 1px; opacity: .9; }
+.campaign-strategy-map .planet-landmark-labels { font-size: 9px; opacity: .68; }
+.campaign-strategy-map .planet-map-coordinate { fill: #c1b18c; font-size: 9px; opacity: .72; }
+.campaign-strategy-map .planet-frontline-underlay { stroke-width: 8; opacity: .73; }
+.campaign-strategy-map .planet-frontline { stroke-width: 2; stroke-dasharray: 4 5; filter: none; }
+.campaign-strategy-map .planet-frontline-dashes { opacity: .82; }
+.map-operations-layer { pointer-events: none; }
+.map-mission-marker { pointer-events: all; cursor: pointer; color: #dfc37d; outline: none; transition: filter .14s ease, opacity .14s ease; }
+.map-mission-halo { fill: #14150feF; stroke: #786c4d; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.map-mission-ring { fill: none; stroke: currentColor; stroke-width: 1.15; opacity: .92; vector-effect: non-scaling-stroke; }
+.map-mission-glyph { color: inherit; }
+.map-mission-type { fill: #e3d5b7; stroke: #1a1a14; stroke-width: 2.5px; paint-order: stroke; font: 700 8px var(--mono); letter-spacing: .45px; pointer-events: none; }
+.map-mission-marker:hover,
+.map-mission-marker:focus-visible,
+.map-mission-marker.is-selected { filter: drop-shadow(0 0 5px #d7b960a8); }
+.map-mission-marker:hover .map-mission-ring,
+.map-mission-marker:focus-visible .map-mission-ring,
+.map-mission-marker.is-selected .map-mission-ring { stroke-width: 2.4; }
+.map-mission-marker.mission-destroy { color: #d28d73; }
+.map-mission-marker.mission-defend { color: #bdc08d; }
+.map-mission-marker.state-locked { color: #79776b; opacity: .62; }
+.map-mission-marker.state-in_progress { color: #e8ce7a; }
+.map-mission-marker.state-completed { color: #a3ac86; opacity: .72; }
+.map-mission-state-glyph { fill: #151610; }
+.map-mission-complete { fill: none; stroke: #c7d2a0; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.map-mission-progress { fill: none; stroke: #e8ce7a; stroke-width: 2.6; stroke-linecap: round; }
+.mission-details-panel { display: grid; align-content: start; gap: 10px; }
+.mission-state-label { color: #d0b06a; font: 10px var(--mono); }
+.mission-state-label.state-locked { color: #908b7d; }
+.mission-state-label.state-completed { color: #aab58b; }
+.mission-state-label.state-in_progress { color: #e1c975; }
+.planet-mission-type-line { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 9px 0; border-block: 1px solid #37362d; color: #969386; font: 9px var(--mono); }
+.planet-mission-type-line b { color: #d7c59c; font-size: 10px; font-weight: 500; }
+.planet-sector-operation-count { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 11px 0; border-block: 1px solid #34342c; color: #aaa592; font: 9px var(--mono); }
+.planet-sector-operation-count b { color: #e0c57d; font: 600 17px var(--display); }
+.planet-launch-operation { display: flex; justify-content: space-between; width: 100%; margin-top: 4px; padding: 12px 13px; border: 1px solid #8b7548; background: #302a1c; color: #e0ca91; font: 10px var(--mono); cursor: pointer; }
+.planet-launch-operation:hover { border-color: #c8ae6d; background: #39311f; color: #fff0c6; }
+.planet-map-tools button:disabled { opacity: .38; cursor: default; }
+.planet-region-lock { padding: 10px 0; border-top: 1px solid #39372e; }
+.planet-campaign-layout .planet-campaign-summary { width: auto; display: grid; gap: 16px; padding: 15px 0; border: 0; border-block: 1px solid #34342c; }
+.planet-campaign-layout .planet-campaign-summary > span,
+.planet-campaign-layout .planet-campaign-summary > b,
+.planet-campaign-layout .planet-campaign-summary > i { width: auto; }
+.planet-campaign-layout .planet-summary-total b { color: #e4d1a3; font: 600 38px/1 var(--display); }
+.planet-campaign-layout .planet-summary-total span { color: #a7a18f; font: 9px var(--mono); }
+.planet-campaign-layout .planet-summary-controls { display: grid; gap: 9px; }
+.planet-campaign-layout .planet-summary-controls span { display: flex; align-items: center; gap: 8px; color: #bdb7a8; font-size: 12px; }
+.planet-campaign-layout .planet-summary-controls b { margin-left: auto; color: #e1d8c3; font: 600 13px var(--mono); }
+.planet-campaign-layout .planet-summary-progress { display: grid; grid-template-columns: 1fr auto; gap: 8px; color: #aaa592; font: 9px var(--mono); }
+.planet-campaign-layout .planet-summary-progress > i { grid-column: 1 / -1; height: 3px; background: #333229; }
+.planet-campaign-layout .planet-summary-progress > i em { display: block; height: 100%; background: linear-gradient(90deg, #817344, #c1a65e); }
+@media (min-width: 1500px) { .planet-campaign-layout { grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr); } }
+@media (max-width: 800px) {
+  .planet-campaign-layout { grid-template-columns: minmax(0, 1fr); }
+  .planet-campaign-layout .planet-territory-panel { position: static; min-height: 0; max-height: none; }
+}

@@ -5,6 +5,7 @@ import { defectToChaos } from '../services/authService.js'
 import {
   answerQuiz, completeCampaign, discoverEntry, getFactionFragments, recordSignalIntercept,
   getKnowledge, getState, readEntry, recordInterceptedLore, studyFaction,
+  recordTacticalMission, completeTacticalCampaign,
 } from '../services/gameService.js'
 
 const router = Router()
@@ -13,6 +14,16 @@ router.post('/campaign/complete', requireAuth, (req, res) => {
   const result = completeCampaign(req.user.sub, req.user.faction, req.body?.levelId)
   if (result.error) return res.status(result.status).json({ error: result.error })
   res.json(result.state)
+})
+router.post('/campaign/tactical/:operationId/mission', requireAuth, (req, res) => {
+  const result = recordTacticalMission(req.user.sub, req.user.faction, req.params.operationId, req.body || {})
+  if (result.error) return res.status(result.status).json({ error: result.error })
+  res.json(result)
+})
+router.post('/campaign/tactical/:operationId/complete', requireAuth, (req, res) => {
+  const result = completeTacticalCampaign(req.user.sub, req.user.faction, req.params.operationId)
+  if (result.error) return res.status(result.status).json({ error: result.error })
+  res.json(result)
 })
 router.post('/campaign/defect', requireAuth, async (req, res) => {
   const result = await defectToChaos(req.user.sub, req.body || {})

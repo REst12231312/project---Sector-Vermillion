@@ -156,3 +156,4 @@
 .planet-related-operation>b{font-size:12px}
 .planet-related-operation>small{font-size:8px}
 .planet-related-actions button,.planet-related-actions a{font-size:10px}
+.planet-campaign-link{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0 13px;padding:10px 11px;border:1px solid #635338;background:#1b1913;color:#d4bc82;font:9px var(--mono);letter-spacing:.25px;text-decoration:none;transition:background .16s,border-color .16s}.planet-campaign-link:hover{border-color:#b79a5d;background:#242116;color:#f0dfb4}.planet-campaign-link span{font-size:15px}

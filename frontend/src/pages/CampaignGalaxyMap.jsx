@@ -110,7 +110,7 @@ function statusFor(operation, levels, completed) {
   return index === 0 || completed.includes(levels[index - 1]?.id) ? 'ready' : 'locked'
 }
 
-export default function CampaignGalaxyMap({ faction = 'imperium', levels, completedLevels, onStartOperation }) {
+export default function CampaignGalaxyMap({ faction = 'imperium', levels, completedLevels, onStartOperation, allowCompletedOperationIds = [] }) {
   const mapData = mapConfigs[faction] || mapConfigs.imperium
   const worlds = mapData.worlds
   const mapRoutes = mapData.routes
@@ -358,6 +358,7 @@ export default function CampaignGalaxyMap({ faction = 'imperium', levels, comple
         <p className="planet-type">{selectedPlanet.type}</p>
         <dl className="planet-facts"><div><dt>СИСТЕМА</dt><dd>{selectedPlanet.system}</dd></div><div><dt>РЕГИОН</dt><dd>{selectedPlanet.region}</dd></div></dl>
         <p className="planet-description">{selectedPlanet.description}</p>
+        {faction === 'imperium' && selectedPlanet.id === 'terra' && <Link className="planet-campaign-link" to="/planets/terra/eras/unification?territory=terra-northern-front">Открыть планетарную карту Терры <span>→</span></Link>}
         <div className="planet-related"><p className="eyebrow">СВЯЗАННЫЕ ОПЕРАЦИИ</p>{relatedOperations.map((operation) => {
           const status = statusFor(operation, levels, completedLevels)
           const isExpanded = expandedLoreId === operation.id
@@ -368,7 +369,7 @@ export default function CampaignGalaxyMap({ faction = 'imperium', levels, comple
             {isExpanded && record && <div className="planet-lore-excerpt">{record.paragraphs.slice(0, 2).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>}
           </div>
         })}</div>
-        {selectedOperation && <div className="galaxy-selected-operation"><p className="eyebrow">ОПЕРАЦИЯ {selectedOperation.number}</p><h4>{selectedOperation.title}</h4><p>{selectedOperation.objective}</p>{statusFor(selectedOperation, levels, completedLevels) === 'ready' && <button type="button" className="button button-primary" onClick={() => onStartOperation(selectedOperation.id)}>Перейти к операции <span>→</span></button>}</div>}
+        {selectedOperation && <div className="galaxy-selected-operation"><p className="eyebrow">ОПЕРАЦИЯ {selectedOperation.number}</p><h4>{selectedOperation.title}</h4><p>{selectedOperation.objective}</p>{(statusFor(selectedOperation, levels, completedLevels) === 'ready' || (statusFor(selectedOperation, levels, completedLevels) === 'complete' && allowCompletedOperationIds.includes(selectedOperation.id))) && <button type="button" className="button button-primary" onClick={() => onStartOperation(selectedOperation.id)}>{statusFor(selectedOperation, levels, completedLevels) === 'complete' ? 'Открыть тактическую кампанию' : 'Перейти к операции'} <span>→</span></button>}</div>}
       </aside>
     </div>
   </section>

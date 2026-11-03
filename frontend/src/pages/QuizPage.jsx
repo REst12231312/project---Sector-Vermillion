@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { campaignLevels as imperiumLevels, resourceLabels } from '../data/imperiumCampaign'
 import { chaosLevels } from '../data/chaosCampaign'
 import { orksLevels } from '../data/orksCampaign'
@@ -7,6 +7,9 @@ import { tauLevels } from '../data/tauCampaign'
 import { applyServerProgress, getProgress } from '../utils/gameProgress'
 import { getCurrentUser, postJson, saveAuth } from '../utils/api'
 import CampaignGalaxyMap from './CampaignGalaxyMap'
+import { buildOperationCampaignPath } from '../features/planetaryCampaign/integration/campaignNavigation'
+import { getOperationGameplayConfig } from '../features/planetaryCampaign/integration/operationGameplayConfig'
+import { loadOperationProgress, mergeCampaignCompletions } from '../features/planetaryCampaign/integration/campaignProgressAdapter'
 import './QuizPage.css'
 import './TauTheme.css'
 
@@ -58,6 +61,7 @@ const campaignAwards = {
 
 export default function QuizPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [progress, setProgress] = React.useState(getProgress)
   const [sceneIndex, setSceneIndex] = React.useState(0)
   const [replaying, setReplaying] = React.useState(false)
@@ -74,10 +78,21 @@ export default function QuizPage() {
   const factionTitle = faction === 'chaos' ? 'СИЛЫ ХАОСА' : faction === 'orks' ? 'ОРКИ' : faction === 'tau' ? 'ИМПЕРИЯ ТАУ' : 'ИМПЕРИУМ ЧЕЛОВЕЧЕСТВА'
   const selectedLevel = searchParams.get('level')
   const level = campaignLevels.find((item) => item.id === selectedLevel)
-  const completedLevels = progress.completedLevels || []
+  const completedLevels = mergeCampaignCompletions(progress.completedLevels, loadOperationProgress())
   const levelIndex = campaignLevels.findIndex((item) => item.id === selectedLevel)
   const nextLevel = campaignLevels[levelIndex + 1]
   const unlocked = levelIndex <= 0 || completedLevels.includes(level?.id) || completedLevels.includes(campaignLevels[levelIndex - 1]?.id)
+
+  function startOperation(operationId) {
+    const index = campaignLevels.findIndex((entry) => entry.id === operationId)
+    if (index < 0 || !(index === 0 || completedLevels.includes(operationId) || completedLevels.includes(campaignLevels[index - 1]?.id))) return
+    const gameplay = getOperationGameplayConfig(operationId)
+    if (gameplay.gameplayMode === 'planetary_tactical' && gameplay.factionId === faction) {
+      const destination = buildOperationCampaignPath(operationId)
+      if (destination) { navigate(destination); return }
+    }
+    setSearchParams({ level: operationId })
+  }
 
   React.useEffect(() => {
     const updateProgress = (event) => setProgress(event.detail)
@@ -213,7 +228,7 @@ export default function QuizPage() {
     <h1>{faction === 'chaos' ? 'Путь к Терре' : faction === 'orks' ? 'Путь Waaagh!' : faction === 'tau' ? 'Путь Высшего блага' : 'Путь к звёздам'}</h1>
     <p className="hero-lead">{faction === 'chaos' ? 'Веди тайные культы и мятежные легионы от первых шёпотов Варпа через Калт и осаду Терры к Очищению. Выбирай тактику, удерживай союзников и открывай новые главы.' : faction === 'orks' ? 'Собери орду, пройди каноническую битву на Улланоре и продолжи поход в 41-м тысячелетии. Распределяй снабжение, поддержку и разведданные. Знание Warhammer не требуется.' : faction === 'tau' ? 'Пройди девять операций: от первых сфер и Крестового похода Дамокла через Аггреллан и Фарсайта до Четвёртой и Пятой сфер, Чалната и Цао Куо. Координируй касты, разведку и огневую поддержку во имя Высшего блага.' : 'Пройди двенадцать операций: от объединения Терры и поиска Примархов через Давин, Просперо, Марс, Исстван и Калт до Бета-Гармона, обороны Терры и послевоенного Очищения. Распределяй силы, поддержку и разведданные. Знание Warhammer не требуется.'}</p>
     <p className="campaign-note">Сюжетные операции — игровые сценарии проекта; архивные досье после них основаны на источниках по Warhammer 40,000.</p>
-    <CampaignGalaxyMap faction={faction} levels={campaignLevels} completedLevels={completedLevels} onStartOperation={(levelId) => setSearchParams({ level: levelId })} />
+    <CampaignGalaxyMap faction={faction} levels={campaignLevels} completedLevels={completedLevels} allowCompletedOperationIds={campaignLevels.filter((entry) => getOperationGameplayConfig(entry.id).gameplayMode === 'planetary_tactical' && getOperationGameplayConfig(entry.id).factionId === faction).map((entry) => entry.id)} onStartOperation={startOperation} />
     <p className="campaign-next-hint">Завершение каждой операции открывает отдельную архивную главу и следующий этап кампании.</p>
   </main>
 }
